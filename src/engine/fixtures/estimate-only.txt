@@ -1,0 +1,5 @@
+Hash Join  (cost=1.18..2.36 rows=8 width=52)
+  Hash Cond: (p.cliente_id = c.id)
+  ->  Seq Scan on pedidos p  (cost=0.00..1.08 rows=8 width=44)
+  ->  Hash  (cost=1.08..1.08 rows=8 width=12)
+        ->  Seq Scan on clientes c  (cost=0.00..1.08 rows=8 width=12)

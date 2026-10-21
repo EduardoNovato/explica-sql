@@ -1,3 +1,5 @@
+import type { Verdict } from '../engine';
+
 export const languages = {
   es: { label: 'ES', name: 'Español', locale: 'es-CO', path: '/' },
   en: { label: 'EN', name: 'English', locale: 'en-US', path: '/en/' },
@@ -54,6 +56,12 @@ const es = {
     soon: 'Muy pronto',
     privacy: 'El análisis corre en tu navegador: el plan no sale de tu computadora.',
   },
+  verdict: {
+    fast: 'Rápida',
+    acceptable: 'Aceptable',
+    slow: 'Lenta',
+    'very-slow': 'Muy lenta',
+  } satisfies Record<Verdict, string>,
   footer: {
     madeBy: 'Hecho por',
     place: 'en Barranquilla',
@@ -105,6 +113,12 @@ const en: UiStrings = {
     analyze: 'Analyze',
     soon: 'Coming soon',
     privacy: 'The analysis runs in your browser: your plan never leaves your computer.',
+  },
+  verdict: {
+    fast: 'Fast',
+    acceptable: 'Acceptable',
+    slow: 'Slow',
+    'very-slow': 'Very Slow',
   },
   footer: {
     madeBy: 'Made by',

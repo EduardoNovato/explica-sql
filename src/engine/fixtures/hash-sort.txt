@@ -1,0 +1,18 @@
+Sort  (cost=412563.45..414063.45 rows=600000 width=24) (actual time=3105.226..3290.513 rows=541203 loops=1)
+  Sort Key: l.l_shipdate
+  Sort Method: external merge  Disk: 22016kB
+  Buffers: shared hit=1650 read=111420, temp read=12862 written=12904
+  ->  Hash Join  (cost=8463.00..338104.45 rows=600000 width=24) (actual time=196.410..2810.877 rows=541203 loops=1)
+        Hash Cond: (l.l_orderkey = o.o_orderkey)
+        Buffers: shared hit=1650 read=111420, temp read=10110 written=10110
+        ->  Seq Scan on lineitem l  (cost=0.00..308253.12 rows=600000 width=16) (actual time=0.031..2120.334 rows=541203 loops=1)
+              Filter: (l.l_shipdate >= '1998-06-01'::date)
+              Rows Removed by Filter: 5460012
+              Buffers: shared hit=1620 read=108650
+        ->  Hash  (cost=5852.00..5852.00 rows=150000 width=8) (actual time=195.880..195.881 rows=150000 loops=1)
+              Buckets: 131072  Batches: 4  Memory Usage: 2466kB
+              Buffers: shared hit=30 read=2770, temp written=440
+              ->  Seq Scan on orders o  (cost=0.00..5852.00 rows=150000 width=8) (actual time=0.012..120.448 rows=150000 loops=1)
+                    Buffers: shared hit=30 read=2770
+Planning Time: 0.420 ms
+Execution Time: 3318.902 ms

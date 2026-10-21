@@ -1,0 +1,8 @@
+HashAggregate  (cost=245012.00..262512.00 rows=200000 width=12) (actual time=900.020..1250.512 rows=200000 loops=1)
+  Group Key: l_partkey
+  Planned Partitions: 4  Batches: 5  Memory Usage: 4145kB  Disk Usage: 13256kB
+  Buffers: shared hit=112000, temp read=1600 written=2900
+  ->  Seq Scan on lineitem  (cost=0.00..172012.00 rows=6001215 width=8) (actual time=0.010..400.200 rows=6001215 loops=1)
+        Buffers: shared hit=112000
+Planning Time: 0.100 ms
+Execution Time: 1290.000 ms

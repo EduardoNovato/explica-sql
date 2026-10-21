@@ -1,0 +1,12 @@
+Finalize Aggregate  (cost=10633.55..10633.56 rows=1 width=8) (actual time=48.204..50.012 rows=1 loops=1)
+  Buffers: shared hit=5406
+  ->  Gather  (cost=10633.33..10633.54 rows=2 width=8) (actual time=48.100..50.002 rows=2 loops=1)
+        Workers Planned: 2
+        Workers Launched: 1
+        Buffers: shared hit=5406
+        ->  Partial Aggregate  (cost=9633.33..9633.34 rows=1 width=8) (actual time=45.900..45.901 rows=1 loops=2)
+              Buffers: shared hit=5406
+              ->  Parallel Seq Scan on lineitem  (cost=0.00..9008.33 rows=250000 width=0) (actual time=0.020..30.555 rows=300000 loops=2)
+                    Buffers: shared hit=5406
+Planning Time: 0.080 ms
+Execution Time: 50.110 ms

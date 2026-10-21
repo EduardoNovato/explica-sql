@@ -1,0 +1,16 @@
+Result  (cost=2841.20..2842.47 rows=1 width=512) (actual time=24.310..142.870 rows=3870 loops=1)
+  Buffers: shared hit=21950, temp read=310 written=310
+  ->  Sort  (cost=2841.20..2841.20 rows=1 width=480) (actual time=24.250..25.904 rows=3870 loops=1)
+        Sort Key: numero
+        Sort Method: external merge  Disk: 2480kB
+        Buffers: shared hit=790, temp read=310 written=310
+        ->  Bitmap Heap Scan on facturas  (cost=98.40..2841.19 rows=1 width=480) (actual time=0.240..15.122 rows=3870 loops=1)
+              Recheck Cond: ((sede_id = 7) AND (anulada_en IS NULL))
+              Filter: (((numero)::text ~~ opcional(NULL::text, '%'::text)) AND ((tipo)::text ~~ opcional(NULL::text, '%'::text)))
+              Heap Blocks: exact=772
+              Buffers: shared hit=790
+              ->  Bitmap Index Scan on facturas_sede_idx  (cost=0.00..98.40 rows=3912 width=0) (actual time=0.180..0.181 rows=3954 loops=1)
+                    Index Cond: ((sede_id = 7) AND (anulada_en IS NULL))
+                    Buffers: shared hit=18
+Planning time: 0.104 ms
+Execution time: 143.512 ms

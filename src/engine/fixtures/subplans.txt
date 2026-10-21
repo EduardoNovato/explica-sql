@@ -1,0 +1,11 @@
+Limit  (cost=0.31..2.42 rows=1 width=12) (actual time=0.050..0.052 rows=0 loops=1)
+  InitPlan 1 (returns $0)
+    ->  Result  (cost=0.00..0.01 rows=1 width=4) (actual time=0.001..0.001 rows=1 loops=1)
+  ->  Nested Loop  (cost=0.30..2.41 rows=1 width=12) (actual time=0.040..0.041 rows=0 loops=1)
+        ->  Seq Scan on clientes c  (cost=0.00..1.10 rows=1 width=8) (actual time=0.039..0.039 rows=0 loops=1)
+              Filter: (c.id = $0)
+              Rows Removed by Filter: 8
+        ->  Index Scan using pedidos_cliente_idx on pedidos p  (cost=0.29..1.30 rows=1 width=8) (never executed)
+              Index Cond: (p.cliente_id = c.id)
+Planning Time: 0.300 ms
+Execution Time: 0.120 ms

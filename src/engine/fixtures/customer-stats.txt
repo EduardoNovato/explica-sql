@@ -1,0 +1,6 @@
+Seq Scan on customer  (cost=0.00..5100.00 rows=12 width=8) (actual time=0.020..38.400 rows=6020 loops=1)
+  Filter: ((c_nationkey = 7) AND (c_mktsegment = 'BUILDING'::bpchar))
+  Rows Removed by Filter: 143980
+  Buffers: shared hit=3600
+Planning Time: 0.100 ms
+Execution Time: 39.000 ms

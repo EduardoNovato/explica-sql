@@ -1,0 +1,6 @@
+Limit  (cost=0.00..92.20 rows=5000 width=8) (actual time=0.015..1.210 rows=5000 loops=1)
+  Buffers: shared hit=23
+  ->  Seq Scan on lineitem  (cost=0.00..18440.00 rows=1000000 width=8) (actual time=0.014..0.905 rows=5000 loops=1)
+        Buffers: shared hit=23
+Planning Time: 0.050 ms
+Execution Time: 1.300 ms

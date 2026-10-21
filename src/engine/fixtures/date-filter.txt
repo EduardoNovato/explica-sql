@@ -1,0 +1,6 @@
+Seq Scan on pedidos  (cost=0.00..2350.00 rows=500 width=40) (actual time=0.900..48.700 rows=310 loops=1)
+  Filter: (date(creado_en) = '2026-03-15'::date)
+  Rows Removed by Filter: 99690
+  Buffers: shared hit=1350
+Planning Time: 0.080 ms
+Execution Time: 48.900 ms

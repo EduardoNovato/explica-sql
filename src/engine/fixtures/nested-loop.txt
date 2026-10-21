@@ -1,0 +1,10 @@
+Nested Loop  (cost=0.00..1823412.00 rows=2000 width=12) (actual time=0.950..1520.442 rows=2000 loops=1)
+  Buffers: shared hit=440211
+  ->  Seq Scan on clientes c  (cost=0.00..35.00 rows=2000 width=8) (actual time=0.008..0.410 rows=2000 loops=1)
+        Buffers: shared hit=15
+  ->  Seq Scan on pedidos p  (cost=0.00..911.00 rows=1 width=8) (actual time=0.380..0.758 rows=1 loops=2000)
+        Filter: (p.cliente_id = c.id)
+        Rows Removed by Filter: 49999
+        Buffers: shared hit=440196
+Planning Time: 0.210 ms
+Execution Time: 1520.910 ms

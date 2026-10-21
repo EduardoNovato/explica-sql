@@ -1,0 +1,7 @@
+QUERY PLAN
+Seq Scan on pedidos  (cost=0.00..1.10 rows=3 width=44) (actual time=0.011..0.014 rows=3 loops=1)
+  Filter: ((estado)::text = 'pagado'::text)
+  Rows Removed by Filter: 5
+  Buffers: shared hit=1
+Planning Time: 0.062 ms
+Execution Time: 0.032 ms

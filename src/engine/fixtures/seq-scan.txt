@@ -1,0 +1,6 @@
+Seq Scan on orders  (cost=0.00..44076.00 rows=15 width=107) (actual time=12.418..185.330 rows=14 loops=1)
+  Filter: (o_custkey = 74221)
+  Rows Removed by Filter: 1499986
+  Buffers: shared hit=2048 read=23028
+Planning Time: 0.090 ms
+Execution Time: 185.512 ms

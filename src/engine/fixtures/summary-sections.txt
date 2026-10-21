@@ -1,0 +1,19 @@
+Hash Join  (cost=1.18..2.36 rows=8 width=52) (actual time=0.040..0.052 rows=8 loops=1)
+  Hash Cond: (p.cliente_id = c.id)
+  Buffers: shared hit=2
+  ->  Seq Scan on pedidos p  (cost=0.00..1.08 rows=8 width=44) (actual time=0.008..0.010 rows=8 loops=1)
+        Buffers: shared hit=1
+  ->  Hash  (cost=1.08..1.08 rows=8 width=12) (actual time=0.015..0.016 rows=8 loops=1)
+        Buckets: 1024  Batches: 1  Memory Usage: 9kB
+        Buffers: shared hit=1
+        ->  Seq Scan on clientes c  (cost=0.00..1.08 rows=8 width=12) (actual time=0.006..0.008 rows=8 loops=1)
+              Buffers: shared hit=1
+Settings: work_mem = '64MB'
+Planning:
+  Buffers: shared hit=120 read=4
+Planning Time: 0.410 ms
+JIT:
+  Functions: 6
+  Options: Inlining false, Optimization false, Expressions true, Deforming true
+  Timing: Generation 0.900 ms, Inlining 0.000 ms, Optimization 0.300 ms, Emission 5.000 ms, Total 6.200 ms
+Execution Time: 7.100 ms
