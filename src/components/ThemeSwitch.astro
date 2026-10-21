@@ -1,0 +1,23 @@
+---
+import UiIcon from './UiIcon.astro';
+import { useTranslations, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+---
+
+<button
+  type="button"
+  role="switch"
+  aria-checked="true"
+  aria-label={t.header.darkMode}
+  data-theme-toggle
+  class="group grid size-10 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+>
+  <UiIcon name="moon" class="size-[18px] group-aria-checked:hidden" />
+  <UiIcon name="sun" class="hidden size-[18px] group-aria-checked:block" />
+</button>

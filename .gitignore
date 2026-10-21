@@ -1,0 +1,26 @@
+# build
+dist/
+.astro/
+.vercel/
+
+# dependencias
+node_modules/
+
+# pruebas
+coverage/
+
+# logs y entorno
+npm-debug.log*
+.env
+.env.*
+!.env.example
+
+# plan de trabajo local (incluye notas internas del autor; no se publica)
+/PLAN.md
+
+# sistema, editor y skills locales de agentes
+.DS_Store
+Thumbs.db
+.claude/
+.agents/
+skills-lock.json

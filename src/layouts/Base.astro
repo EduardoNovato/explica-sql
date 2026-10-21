@@ -1,0 +1,72 @@
+---
+import '@fontsource/dm-serif-display/400.css';
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
+import '../styles/global.css';
+import serifFont from '@fontsource/dm-serif-display/files/dm-serif-display-latin-400-normal.woff2?url';
+import { languages, useTranslations, type Lang } from '../i18n/ui';
+
+interface Props {
+  lang: Lang;
+  title?: string;
+}
+
+const { lang, title } = Astro.props;
+const t = useTranslations(lang);
+const canonical = new URL(languages[lang].path, Astro.site);
+const locale = languages[lang].locale;
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title ?? t.meta.title}</title>
+    <meta name="description" content={t.meta.description} />
+    <link rel="canonical" href={canonical} />
+    {
+      Object.values(languages).map((l) => (
+        <link rel="alternate" hreflang={l.locale} href={new URL(l.path, Astro.site)} />
+      ))
+    }
+    <link rel="alternate" hreflang="x-default" href={new URL('/', Astro.site)} />
+
+    <meta name="theme-color" content="#0b1012" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f1f5f3" media="(prefers-color-scheme: light)" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href={serifFont} as="font" type="font/woff2" crossorigin />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Explica SQL" />
+    <meta property="og:title" content={title ?? t.meta.title} />
+    <meta property="og:description" content={t.meta.description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:locale" content={locale.replace('-', '_')} />
+
+    <!-- Aplica el tema antes de pintar para evitar el parpadeo -->
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+        var theme = 'dark';
+        try {
+          var saved = localStorage.getItem('theme');
+          if (saved === 'light' || saved === 'dark') theme = saved;
+          else if (window.matchMedia('(prefers-color-scheme: light)').matches) theme = 'light';
+        } catch (e) {}
+        root.dataset.theme = theme;
+        root.classList.add('js');
+        var bar = theme === 'dark' ? '#0b1012' : '#f1f5f3';
+        document.querySelectorAll('meta[name="theme-color"]').forEach(function (meta) {
+          meta.setAttribute('content', bar);
+        });
+      })();
+    </script>
+  </head>
+  <body class="min-h-dvh">
+    <slot />
+    <script>
+      import '../scripts/theme.ts';
+    </script>
+  </body>
+</html>

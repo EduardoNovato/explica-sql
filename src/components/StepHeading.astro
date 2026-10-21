@@ -1,0 +1,13 @@
+---
+interface Props {
+  id: string;
+  step: number;
+}
+
+const { id, step } = Astro.props;
+---
+
+<h2 id={id} class="flex items-baseline gap-3 text-lg font-medium text-ink sm:text-xl">
+  <span class="font-mono text-xs text-accent" aria-hidden="true">{String(step).padStart(2, '0')}</span>
+  <slot />
+</h2>
