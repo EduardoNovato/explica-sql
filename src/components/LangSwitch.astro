@@ -3,23 +3,25 @@ import { languages, useTranslations, type Lang } from '../i18n/ui';
 
 interface Props {
   lang: Lang;
+  /** Ruta de esta misma página en cada idioma */
+  paths: Record<Lang, string>;
 }
 
-const { lang } = Astro.props;
+const { lang, paths } = Astro.props;
 const t = useTranslations(lang);
 ---
 
 <div class="inline-flex rounded-lg border border-line p-0.5 font-mono text-[11px]" role="group" aria-label={t.header.langLabel}>
   {
-    (Object.entries(languages) as [Lang, (typeof languages)[Lang]][]).map(([code, l]) => (
+    (Object.keys(languages) as Lang[]).map((code) => (
       <a
-        href={l.path}
-        hreflang={l.locale}
-        lang={l.locale}
+        href={paths[code]}
+        hreflang={languages[code].locale}
+        lang={languages[code].locale}
         aria-current={code === lang ? 'page' : undefined}
         class="rounded-md px-2.5 py-1 text-muted transition-colors hover:text-ink aria-[current=page]:bg-surface-2 aria-[current=page]:text-ink"
       >
-        {l.label}<span class="sr-only"> · {l.name}</span>
+        {languages[code].label}<span class="sr-only"> · {languages[code].name}</span>
       </a>
     ))
   }

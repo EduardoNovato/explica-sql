@@ -1,0 +1,12 @@
+---
+import type { GetStaticPaths } from 'astro';
+import RulePage from '../../../components/RulePage.astro';
+import { ruleOrder, ruleTexts } from '../../../i18n/rules';
+
+export const getStaticPaths = (() =>
+  ruleOrder.map((rule) => ({ params: { slug: ruleTexts.en[rule].slug }, props: { rule } }))) satisfies GetStaticPaths;
+
+const { rule } = Astro.props;
+---
+
+<RulePage lang="en" rule={rule} />

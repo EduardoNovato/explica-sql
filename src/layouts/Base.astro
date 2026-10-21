@@ -9,12 +9,18 @@ import { languages, useTranslations, type Lang } from '../i18n/ui';
 interface Props {
   lang: Lang;
   title?: string;
+  description?: string;
+  /** Ruta de esta misma página en cada idioma (por defecto, la página de inicio) */
+  paths?: Record<Lang, string>;
 }
 
-const { lang, title } = Astro.props;
+const { lang, title, description } = Astro.props;
 const t = useTranslations(lang);
-const canonical = new URL(languages[lang].path, Astro.site);
+const paths = Astro.props.paths ?? { es: languages.es.path, en: languages.en.path };
+const canonical = new URL(paths[lang], Astro.site);
 const locale = languages[lang].locale;
+const pageTitle = title ?? t.meta.title;
+const pageDescription = description ?? t.meta.description;
 ---
 
 <!doctype html>
@@ -22,15 +28,15 @@ const locale = languages[lang].locale;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title ?? t.meta.title}</title>
-    <meta name="description" content={t.meta.description} />
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
     <link rel="canonical" href={canonical} />
     {
-      Object.values(languages).map((l) => (
-        <link rel="alternate" hreflang={l.locale} href={new URL(l.path, Astro.site)} />
+      (Object.keys(languages) as Lang[]).map((code) => (
+        <link rel="alternate" hreflang={languages[code].locale} href={new URL(paths[code], Astro.site)} />
       ))
     }
-    <link rel="alternate" hreflang="x-default" href={new URL('/', Astro.site)} />
+    <link rel="alternate" hreflang="x-default" href={new URL(paths.es, Astro.site)} />
 
     <meta name="theme-color" content="#0b1012" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f1f5f3" media="(prefers-color-scheme: light)" />
@@ -39,8 +45,8 @@ const locale = languages[lang].locale;
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Explica SQL" />
-    <meta property="og:title" content={title ?? t.meta.title} />
-    <meta property="og:description" content={t.meta.description} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
     <meta property="og:url" content={canonical} />
     <meta property="og:locale" content={locale.replace('-', '_')} />
 

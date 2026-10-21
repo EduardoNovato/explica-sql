@@ -16,6 +16,11 @@
   --accent: #0f7a68;
   --accent-ink: #ffffff;
   --accent-soft: rgb(15 122 104 / 0.1);
+  /* Severidad de los hallazgos: alerta (rojo coral) y aviso (ámbar); las notas usan el acento */
+  --danger: #b42318;
+  --danger-soft: rgb(180 35 24 / 0.09);
+  --caution: #8a5a00;
+  --caution-soft: rgb(176 115 0 / 0.12);
   color-scheme: light;
 }
 
@@ -33,6 +38,10 @@
     --accent: #3cc9b0;
     --accent-ink: #04241e;
     --accent-soft: rgb(60 201 176 / 0.12);
+    --danger: #ff8a7a;
+    --danger-soft: rgb(255 138 122 / 0.13);
+    --caution: #f2bd4b;
+    --caution-soft: rgb(242 189 75 / 0.13);
     color-scheme: dark;
   }
 }
@@ -50,6 +59,10 @@
   --accent: #3cc9b0;
   --accent-ink: #04241e;
   --accent-soft: rgb(60 201 176 / 0.12);
+  --danger: #ff8a7a;
+  --danger-soft: rgb(255 138 122 / 0.13);
+  --caution: #f2bd4b;
+  --caution-soft: rgb(242 189 75 / 0.13);
   color-scheme: dark;
 }
 
@@ -66,6 +79,10 @@
   --color-accent: var(--accent);
   --color-accent-ink: var(--accent-ink);
   --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-caution: var(--caution);
+  --color-caution-soft: var(--caution-soft);
   --font-serif: "DM Serif Display", Georgia, "Times New Roman", serif;
   --font-sans: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "Cascadia Code", monospace;

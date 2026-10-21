@@ -1,0 +1,104 @@
+---
+import type { RuleId, Severity } from '../engine';
+import { formatCount, formatMs, formatPercent } from '../i18n/format';
+import { ruleExamples, ruleOrder, rulePath, ruleSeverity, ruleTexts, ruleThresholds } from '../i18n/rules';
+import { languages, useTranslations, type Lang } from '../i18n/ui';
+import Page from '../layouts/Page.astro';
+
+interface Props {
+  lang: Lang;
+  rule: RuleId;
+}
+
+const { lang, rule } = Astro.props;
+const t = useTranslations(lang);
+const locale = languages[lang].locale;
+const text = ruleTexts[lang][rule];
+const example = ruleExamples[rule];
+const number = ruleOrder.indexOf(rule) + 1;
+const next: RuleId = ruleOrder[number % ruleOrder.length] ?? 'seq-scan';
+const severity: Severity = ruleSeverity[rule];
+
+// "Cuándo salta" con los umbrales reales del motor
+const values = ruleThresholds[rule];
+const when = text.page.when.replace(/\{(\w+)\}/g, (match, key: string) => {
+  const value = values[key];
+  if (value === undefined) return match;
+  if (key.endsWith('Share')) return formatPercent(value, locale);
+  if (key.endsWith('Ms')) return formatMs(value, locale);
+  return formatCount(value, locale);
+});
+
+const badge: Record<Severity, string> = {
+  alert: 'bg-danger-soft text-danger',
+  warning: 'bg-caution-soft text-caution',
+  note: 'bg-accent-soft text-accent',
+};
+const dot: Record<Severity, string> = { alert: 'bg-danger', warning: 'bg-caution', note: 'bg-accent' };
+---
+
+<Page
+  lang={lang}
+  title={`${text.title} · Explica SQL`}
+  description={text.short}
+  paths={{ es: rulePath('es', rule), en: rulePath('en', rule) }}
+  section="rules"
+>
+  <article class="max-w-3xl">
+    <p class="flex flex-wrap items-center gap-3 font-mono text-xs text-faint">
+      <a href={languages[lang].rulesPath} class="text-muted hover:text-accent">{t.rulesPage.all}</a>
+      <span aria-hidden="true">/</span>
+      <span class="text-accent">{t.rulesPage.rule.replace('{n}', String(number))}</span>
+      <span class={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 font-sans text-[11px] font-medium ${badge[severity]}`}>
+        <span class={`size-1.5 rounded-full ${dot[severity]}`} aria-hidden="true"></span>
+        {t.analysis.severity[severity]}
+      </span>
+    </p>
+    <h1 class="mt-5 font-serif text-[clamp(2.5rem,9vw,4rem)] leading-[1.02] tracking-[-0.01em] text-balance text-ink">{text.title}</h1>
+    <p class="mt-5 text-lg leading-relaxed text-pretty text-muted sm:text-xl">{text.short}</p>
+
+    <section class="mt-12">
+      <h2 class="text-lg font-medium text-ink">{t.rulesPage.what}</h2>
+      <p class="mt-2 leading-relaxed text-pretty text-muted">{text.page.what}</p>
+    </section>
+
+    <section class="mt-8">
+      <h2 class="text-lg font-medium text-ink">{t.rulesPage.example}</h2>
+      <pre
+        class="theme-fade mt-3 overflow-x-auto rounded-xl border border-line-strong bg-surface px-4 py-3.5 font-mono text-[12px] leading-[1.7] text-muted [font-variant-ligatures:none]"
+        translate="no">{example.plan}</pre>
+    </section>
+
+    <section class="mt-8">
+      <h2 class="text-lg font-medium text-ink">{t.rulesPage.when}</h2>
+      <p class="mt-2 leading-relaxed text-pretty text-muted">{when}</p>
+    </section>
+
+    <section class="mt-8">
+      <h2 class="text-lg font-medium text-ink">{t.rulesPage.why}</h2>
+      <p class="mt-2 leading-relaxed text-pretty text-muted">{text.page.why}</p>
+    </section>
+
+    <section class="mt-8">
+      <h2 class="text-lg font-medium text-ink">{t.rulesPage.how}</h2>
+      <p class="mt-2 leading-relaxed text-pretty text-muted">{text.page.how}</p>
+      {
+        example.sql && (
+          <>
+            <h3 class="mt-5 text-sm font-medium text-ink">{t.rulesPage.exampleSql}</h3>
+            <pre
+              class="theme-fade mt-2 overflow-x-auto rounded-xl border border-line bg-bg px-4 py-3 font-mono text-[12.5px] leading-relaxed text-ink [font-variant-ligatures:none]"
+              translate="no">{example.sql}</pre>
+          </>
+        )
+      }
+    </section>
+
+    <nav class="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-6 text-sm">
+      <a href={languages[lang].path} class="text-muted hover:text-accent">← {t.rulesPage.back}</a>
+      <a href={rulePath(lang, next)} class="text-right text-muted hover:text-accent">
+        {t.rulesPage.next}: <span class="text-ink">{ruleTexts[lang][next].title}</span> →
+      </a>
+    </nav>
+  </article>
+</Page>

@@ -1,0 +1,59 @@
+---
+import type { Severity } from '../engine';
+import { ruleOrder, rulePath, ruleSeverity, ruleTexts } from '../i18n/rules';
+import { languages, useTranslations, type Lang } from '../i18n/ui';
+import Page from '../layouts/Page.astro';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const badge: Record<Severity, string> = {
+  alert: 'bg-danger-soft text-danger',
+  warning: 'bg-caution-soft text-caution',
+  note: 'bg-accent-soft text-accent',
+};
+const dot: Record<Severity, string> = { alert: 'bg-danger', warning: 'bg-caution', note: 'bg-accent' };
+---
+
+<Page
+  lang={lang}
+  title={`${t.rulesPage.title} · Explica SQL`}
+  description={t.rulesPage.description}
+  paths={{ es: languages.es.rulesPath, en: languages.en.rulesPath }}
+  section="rules"
+>
+  <div class="max-w-3xl">
+    <h1 class="font-serif text-[clamp(2.75rem,10vw,4.5rem)] leading-[1] tracking-[-0.01em] text-ink">{t.rulesPage.title}</h1>
+    <p class="mt-6 leading-relaxed text-pretty text-muted sm:text-lg">{t.rulesPage.intro}</p>
+  </div>
+
+  <ol class="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    {
+      ruleOrder.map((rule, i) => (
+        <li>
+          <a
+            href={rulePath(lang, rule)}
+            class="theme-fade group flex h-full flex-col rounded-xl border border-line bg-surface p-4 transition-colors hover:border-accent"
+          >
+            <span class="flex items-center gap-2.5 font-mono text-xs text-accent">
+              {String(i + 1).padStart(2, '0')}
+              <span class={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 font-sans text-[11px] font-medium ${badge[ruleSeverity[rule]]}`}>
+                <span class={`size-1.5 rounded-full ${dot[ruleSeverity[rule]]}`} aria-hidden="true" />
+                {t.analysis.severity[ruleSeverity[rule]]}
+              </span>
+            </span>
+            <span class="mt-3 font-medium text-ink group-hover:text-accent">{ruleTexts[lang][rule].title}</span>
+            <span class="mt-1.5 text-sm leading-relaxed text-muted">{ruleTexts[lang][rule].short}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+
+  <p class="mt-10 text-sm">
+    <a href={languages[lang].path} class="text-muted hover:text-accent">← {t.rulesPage.back}</a>
+  </p>
+</Page>

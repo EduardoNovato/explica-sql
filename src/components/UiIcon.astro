@@ -1,5 +1,5 @@
 ---
-type Name = 'copy' | 'check' | 'sun' | 'moon' | 'lock';
+type Name = 'copy' | 'check' | 'sun' | 'moon';
 
 interface Props {
   name: Name;
@@ -37,12 +37,4 @@ const { name, class: className = 'size-4' } = Astro.props;
     )
   }
   {name === 'moon' && <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" />}
-  {
-    name === 'lock' && (
-      <>
-        <rect x="5" y="10.5" width="14" height="10" rx="2.5" />
-        <path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" />
-      </>
-    )
-  }
 </svg>
