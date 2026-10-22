@@ -1,4 +1,5 @@
 import type { NoticeId, ParseError, Severity, Verdict } from '../engine';
+import type { CreateError } from '../share/config';
 
 export const languages = {
   es: { label: 'ES', name: 'Español', locale: 'es-CO', path: '/', rulesPath: '/reglas/' },
@@ -114,6 +115,45 @@ const es = {
       'no-indentation':
         'El plan perdió la sangría al copiarlo y no se puede armar el árbol. Cópialo de nuevo conservando los espacios del inicio de cada línea.',
     } satisfies Record<ParseError, string>,
+  },
+  share: {
+    button: 'Compartir',
+    title: 'Compartir este resultado',
+    privacy:
+      'Se guarda una copia del plan en el servidor durante el tiempo que elijas y después se borra sola. Cualquiera con el link puede verlo, incluidos los nombres de tablas y columnas.',
+    duration: 'El link dura',
+    hours: '{n} horas',
+    mask: 'Ocultar valores literales',
+    maskHint: 'Los textos y números de las condiciones se cambian por ? antes de salir de tu computadora. El análisis no cambia.',
+    create: 'Crear link',
+    creating: 'Creando…',
+    ready: 'Listo: el link vence a las {time}',
+    linkLabel: 'Link para compartir',
+    copy: 'Copiar link',
+    copied: 'Link copiado',
+    copyError: 'No se pudo copiar. Selecciónalo y cópialo a mano.',
+    errors: {
+      invalid: 'No se pudo crear el link. Recarga la página e intenta de nuevo.',
+      'too-large': 'El plan es muy grande para compartirlo (máximo 512 kB).',
+      'not-a-plan': 'Solo se pueden compartir planes que se puedan analizar.',
+      'rate-limited': 'Creaste muchos links en poco tiempo. Intenta de nuevo en un rato.',
+      unavailable: 'Compartir no está disponible en este momento.',
+      network: 'No hubo conexión con el servidor. Revisa tu internet e intenta de nuevo.',
+    } satisfies Record<CreateError | 'network', string>,
+    viewTitle: 'Plan compartido',
+    viewIntro:
+      'Alguien compartió contigo este resultado de EXPLAIN ANALYZE. Se analiza en tu navegador, igual que en la página principal.',
+    planLabel: 'Plan compartido',
+    expires: 'Este link vence a las {time} ({relative}).',
+    expired: 'Este link ya venció.',
+    masked: 'Los valores literales se ocultaron antes de compartirlo.',
+    otherVersion: 'Se compartió con la versión {from} de las reglas y se muestra con la versión {to}: el resultado puede variar.',
+    analyzeOwn: 'Analizar mi propio plan',
+    goneTitle: 'Este link venció o no existe',
+    goneBody:
+      'Los links compartidos duran 2 o 4 horas y después se borran solos. Pídele a quien te lo mandó que lo comparta de nuevo, o analiza tu propio plan.',
+    errorTitle: 'No se pudo cargar el plan',
+    errorBody: 'El servidor no respondió. Intenta de nuevo en un momento.',
   },
   rulesPage: {
     title: 'Las 8 reglas',
@@ -241,6 +281,44 @@ const en: UiStrings = {
       'no-indentation':
         'The plan lost its indentation when copied, so the tree can’t be built. Copy it again keeping the spaces at the start of each line.',
     },
+  },
+  share: {
+    button: 'Share',
+    title: 'Share This Result',
+    privacy:
+      'A copy of the plan is stored on the server for the time you choose and then deletes itself. Anyone with the link can see it, including table and column names.',
+    duration: 'Link lasts',
+    hours: '{n} hours',
+    mask: 'Hide literal values',
+    maskHint: 'Text and numbers in the conditions are replaced with ? before they leave your computer. The analysis doesn’t change.',
+    create: 'Create Link',
+    creating: 'Creating…',
+    ready: 'Done: the link expires at {time}',
+    linkLabel: 'Link to share',
+    copy: 'Copy Link',
+    copied: 'Link copied',
+    copyError: 'Couldn’t copy it. Select it and copy it by hand.',
+    errors: {
+      invalid: 'The link couldn’t be created. Reload the page and try again.',
+      'too-large': 'The plan is too big to share (512 kB max).',
+      'not-a-plan': 'Only plans that can be analyzed can be shared.',
+      'rate-limited': 'You created many links in a short time. Try again in a while.',
+      unavailable: 'Sharing isn’t available right now.',
+      network: 'Couldn’t reach the server. Check your connection and try again.',
+    },
+    viewTitle: 'Shared Plan',
+    viewIntro: 'Someone shared this EXPLAIN ANALYZE result with you. It’s analyzed in your browser, just like on the main page.',
+    planLabel: 'Shared plan',
+    expires: 'This link expires at {time} ({relative}).',
+    expired: 'This link has already expired.',
+    masked: 'Literal values were hidden before sharing.',
+    otherVersion: 'It was shared with version {from} of the rules and is shown with version {to}: the result may differ.',
+    analyzeOwn: 'Analyze my own plan',
+    goneTitle: 'This Link Expired or Doesn’t Exist',
+    goneBody:
+      'Shared links last 2 or 4 hours and then delete themselves. Ask whoever sent it to share it again, or analyze your own plan.',
+    errorTitle: 'The Plan Couldn’t Be Loaded',
+    errorBody: 'The server didn’t respond. Try again in a moment.',
   },
   rulesPage: {
     title: 'The 8 Rules',

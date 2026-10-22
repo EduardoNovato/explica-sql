@@ -3,8 +3,8 @@
 Pega el resultado de `EXPLAIN ANALYZE` de PostgreSQL y en milisegundos te dice si la consulta es lenta,
 dónde se va el tiempo y qué hacer, con el SQL listo para copiar. En español e inglés.
 
-> **Estado:** en construcción. Ya se puede pegar un plan y ver el veredicto, el árbol y los hallazgos
-> con el SQL para copiar. Falta compartir resultados y publicarla.
+> **Estado:** en construcción. Ya se puede pegar un plan, ver el veredicto, el árbol y los hallazgos
+> con el SQL para copiar, y compartir el resultado con un link temporal. Falta publicarla.
 
 ## Cómo se usa
 
@@ -16,6 +16,21 @@ dónde se va el tiempo y qué hacer, con el SQL listo para copiar. En español e
 Para ver un ejemplo sin pegar nada, abre la página con `#ejemplo` al final de la dirección.
 
 El análisis corre en tu navegador: el plan no sale de tu computadora.
+
+## Compartir
+
+El botón **Compartir** crea un link corto (`/s/k7Pq2x`) que dura 2 o 4 horas y después se borra solo.
+
+- Se guarda el texto del plan y la versión de las reglas; quien abre el link lo ve analizado igual.
+- Antes de compartir se puede **ocultar los valores literales**: los textos y números de las condiciones
+  pasan a `?` en el navegador, antes de enviar nada. El análisis no cambia.
+- Solo se aceptan planes que el motor puede leer, de hasta 512 kB, y 20 links por hora por IP.
+- Las páginas compartidas no se indexan ni se guardan en caché.
+
+Los links viven en Redis de [Upstash](https://upstash.com) con TTL. Para activarlo, copia
+`.env.example` a `.env` y llena `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN` (o conecta Upstash
+desde el Marketplace de Vercel, que crea `KV_REST_API_URL` y `KV_REST_API_TOKEN`). Sin esas variables,
+`npm run dev` guarda los links en memoria.
 
 ## Qué revisa
 
@@ -61,7 +76,8 @@ src/
   components/  componentes Astro; analyzer/ es la isla de React con el resultado
   i18n/        textos en español e inglés (ui.ts, rules.ts) y formatos de números
   layouts/     plantilla base (fuentes, tema sin parpadeo) y página con encabezado
-  pages/       / y /reglas/ en español; /en/ y /en/rules/ en inglés
+  pages/       / y /reglas/ en español; /en/ y /en/rules/ en inglés; api/ y s/ para compartir
+  share/       links temporales: validación, almacén con TTL y ocultar valores literales
 ```
 
 Hecho con Astro, React, TypeScript y Tailwind CSS.

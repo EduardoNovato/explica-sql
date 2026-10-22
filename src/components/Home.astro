@@ -67,6 +67,7 @@ const t = useTranslations(lang);
       <Analyzer
         client:load
         strings={analyzerStrings(lang)}
+        lang={lang}
         locale={languages[lang].locale}
         labelledBy="step-paste"
         describedBy="step-paste-hint"

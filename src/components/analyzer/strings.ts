@@ -9,6 +9,7 @@ export interface AnalyzerStrings {
   input: ReturnType<typeof useTranslations>['input'];
   verdict: ReturnType<typeof useTranslations>['verdict'];
   analysis: ReturnType<typeof useTranslations>['analysis'];
+  share: ReturnType<typeof useTranslations>['share'];
   rules: Record<RuleId, RuleStrings>;
   hints: Record<string, string>;
 }
@@ -20,5 +21,5 @@ export function analyzerStrings(lang: Lang): AnalyzerStrings {
     const { title, body, bodyAlert, fix, fixAlert, fixNoSql } = ruleTexts[lang][id];
     rules[id] = { title, body, bodyAlert, fix, fixAlert, fixNoSql, path: rulePath(lang, id) };
   }
-  return { input: t.input, verdict: t.verdict, analysis: t.analysis, rules, hints: ruleHints[lang] };
+  return { input: t.input, verdict: t.verdict, analysis: t.analysis, share: t.share, rules, hints: ruleHints[lang] };
 }

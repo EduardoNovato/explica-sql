@@ -11,15 +11,16 @@ interface Props {
   paths?: Record<Lang, string>;
   /** Marca "Reglas" como la sección actual */
   section?: 'rules';
+  noindex?: boolean;
 }
 
-const { lang, title, description, section } = Astro.props;
+const { lang, title, description, section, noindex } = Astro.props;
 const t = useTranslations(lang);
 const paths = Astro.props.paths ?? { es: languages.es.path, en: languages.en.path };
 const portfolio = new URL(languages[lang].path, author.portfolio).href;
 ---
 
-<Base lang={lang} title={title} description={description} paths={paths}>
+<Base lang={lang} title={title} description={description} paths={paths} noindex={noindex}>
   <a href="#main" class="skip-link">{t.skip}</a>
 
   <div class="mx-auto flex min-h-dvh max-w-6xl flex-col px-4 sm:px-6">

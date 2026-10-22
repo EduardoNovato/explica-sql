@@ -1,0 +1,11 @@
+---
+import SharedPage from '../../components/SharedPage.astro';
+import { loadSharedPage } from '../../share/server';
+
+export const prerender = false;
+
+const id = Astro.params.id ?? '';
+const { session, failed } = await loadSharedPage(id, Astro.response);
+---
+
+<SharedPage lang="es" id={id} session={session} failed={failed} />

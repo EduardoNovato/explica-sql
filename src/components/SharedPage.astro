@@ -1,0 +1,69 @@
+---
+import { RULES_VERSION } from '../engine';
+import { languages, useTranslations, type Lang } from '../i18n/ui';
+import Page from '../layouts/Page.astro';
+import { sharePath, type StoredSession } from '../share/config';
+import Analyzer from './analyzer/Analyzer.tsx';
+import { analyzerStrings } from './analyzer/strings';
+
+interface Props {
+  lang: Lang;
+  id: string;
+  /** `null` si el link venció o no existe */
+  session: StoredSession | null;
+  /** No se pudo consultar el almacén */
+  failed: boolean;
+}
+
+const { lang, id, session, failed } = Astro.props;
+const t = useTranslations(lang);
+
+const title = session ? t.share.viewTitle : failed ? t.share.errorTitle : t.share.goneTitle;
+---
+
+<Page lang={lang} title={`${title} · Explica SQL`} paths={{ es: sharePath('es', id), en: sharePath('en', id) }} noindex>
+  {
+    session ? (
+      <>
+        <div class="max-w-3xl">
+          <p class="font-mono text-[13px] text-accent sm:text-sm" translate="no">
+            <span aria-hidden="true">&gt; </span>EXPLAIN ANALYZE
+          </p>
+          <h1 id="shared-title" class="mt-4 font-serif text-[clamp(2.75rem,10vw,4.5rem)] leading-[1] tracking-[-0.01em] text-ink">
+            {t.share.viewTitle}
+          </h1>
+          <p class="mt-5 leading-relaxed text-pretty text-muted sm:text-lg">{t.share.viewIntro}</p>
+        </div>
+        <div class="mt-10">
+          <Analyzer
+            client:load
+            strings={analyzerStrings(lang)}
+            lang={lang}
+            locale={languages[lang].locale}
+            labelledBy="shared-title"
+            homePath={languages[lang].path}
+            shared={{
+              plan: session.plan,
+              expiresAt: session.expiresAt,
+              masked: session.masked,
+              rulesVersion: session.rulesVersion,
+              currentRulesVersion: RULES_VERSION,
+            }}
+          />
+        </div>
+      </>
+    ) : (
+      <div class="max-w-2xl">
+        <p class="font-mono text-[13px] text-accent sm:text-sm">{failed ? '503' : '404'}</p>
+        <h1 class="mt-4 font-serif text-[clamp(2.5rem,9vw,4rem)] leading-[1.02] tracking-[-0.01em] text-balance text-ink">{title}</h1>
+        <p class="mt-5 leading-relaxed text-pretty text-muted sm:text-lg">{failed ? t.share.errorBody : t.share.goneBody}</p>
+        <a
+          href={languages[lang].path}
+          class="mt-8 inline-flex rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90"
+        >
+          {t.share.analyzeOwn}
+        </a>
+      </div>
+    )
+  }
+</Page>
