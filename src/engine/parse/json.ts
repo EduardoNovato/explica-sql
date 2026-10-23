@@ -1,5 +1,5 @@
 import type { Buffers, ParseResult, PlanNode } from '../types';
-import { emptyBuffers, emptyNode } from './node';
+import { emptyBuffers, emptyNode, postgresKind } from './node';
 
 type Json = Record<string, unknown>;
 
@@ -38,6 +38,7 @@ export function parseJsonPlan(source: string): ParseResult {
     ok: true,
     plan: {
       format: 'json',
+      dialect: 'postgres',
       nodes,
       planningMs: num(top['Planning Time']),
       executionMs: num(top['Execution Time']) ?? num(top['Total Runtime']),
@@ -76,6 +77,7 @@ function toNode(raw: Json, id: number): PlanNode {
 
   const node = emptyNode(id, label);
   node.type = type;
+  node.kind = postgresKind(type);
   node.parallel = parallel;
   if (joinType && joinType !== 'Inner') node.joinType = joinType;
   node.relation = relation;

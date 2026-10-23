@@ -12,6 +12,7 @@
 import { contextNotices } from './notices';
 import { parsePlan } from './parse';
 import { rules } from './rules';
+import { sqlFor } from './sql';
 import { RULES_VERSION } from './thresholds';
 import { computeTiming } from './timing';
 import { isTableScan } from './tree';
@@ -36,9 +37,9 @@ export function analyzePlan(plan: ParsedPlan): Analysis {
   const hasAnalyze = nodes.some((node) => node.actual !== undefined && !node.neverExecuted) || plan.executionMs !== undefined;
   const hasBuffers = nodes.some((node) => node.buffers !== undefined);
   const totalMs = computeTiming(nodes, plan.executionMs);
-  const verdict = hasAnalyze ? verdictFor(totalMs) : undefined;
+  const verdict = hasAnalyze ? verdictFor(totalMs, plan.timeResolutionMs) : undefined;
 
-  const ctx = { nodes, totalMs };
+  const ctx = { nodes, totalMs, dialect: plan.dialect, sql: sqlFor(plan.dialect) };
   const order = new Map(rules.map((rule, i) => [rule.id, i]));
   const findings: Finding[] = rules
     .flatMap((rule) => rule.check(ctx))
@@ -54,7 +55,9 @@ export function analyzePlan(plan: ParsedPlan): Analysis {
   const slowest = hasAnalyze
     ? nodes.reduce<PlanNode | undefined>((best, node) => (!best || node.selfMs > best.selfMs ? node : best), undefined)
     : undefined;
-  const rowsRead = hasAnalyze
+  // Oracle no dice cuántas filas descartó cada escaneo: en su lugar se cuentan los bloques leídos
+  const oracle = plan.dialect === 'oracle';
+  const rowsRead = hasAnalyze && !oracle
     ? nodes
         .filter(isTableScan)
         .reduce(
@@ -64,19 +67,24 @@ export function analyzePlan(plan: ParsedPlan): Analysis {
         )
     : undefined;
 
+  const blocksRead = oracle && root?.buffers ? root.buffers.sharedHit + root.buffers.sharedRead : undefined;
+
   return {
     format: plan.format,
+    dialect: plan.dialect,
     rulesVersion: RULES_VERSION,
     nodes,
     planningMs: plan.planningMs,
     executionMs: plan.executionMs,
     totalMs,
+    timeResolutionMs: plan.timeResolutionMs,
     hasAnalyze,
     hasBuffers,
     verdict,
     metrics: {
       slowestNodeId: slowest?.id,
       rowsRead,
+      blocksRead,
       rowsReturned: root?.actual ? root.actual.rows * root.actual.loops : undefined,
     },
     findings,

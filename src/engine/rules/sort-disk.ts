@@ -1,17 +1,18 @@
 import { sortKeyColumn } from '../expression';
-import { createIndex, setWorkMem, workMemFor } from '../sql';
+import { workMemFor } from '../sql';
 import { thresholds } from '../thresholds';
 import { descendants, isTableScan, namesOf } from '../tree';
-import type { PlanNode, Rule } from '../types';
+import type { PlanNode, Rule, SqlDialect } from '../types';
 
 /**
- * Regla 3 · Ordenamiento en disco: `Sort Method: external merge  Disk: N kB`. Siempre se reporta.
- * Se sugiere un work_mem calculado desde N y, si la Sort Key son columnas de una sola tabla, un
- * índice que entregue las filas ya ordenadas.
+ * Regla 3 · Ordenamiento en disco: `Sort Method: external merge  Disk: N kB` en PostgreSQL, o un
+ * SORT con `Used-Tmp` en Oracle. Siempre se reporta. En PostgreSQL se sugiere un work_mem calculado
+ * desde N y, si la Sort Key son columnas de una sola tabla, un índice que entregue las filas ya
+ * ordenadas. Oracle no muestra la Sort Key ni deja cambiar la memoria por sesión: solo se explica.
  */
 
 /** `CREATE INDEX` con la Sort Key, si todas las claves son columnas de la misma tabla de abajo */
-function sortIndex(node: PlanNode, nodes: PlanNode[]): string | undefined {
+function sortIndex(node: PlanNode, nodes: PlanNode[], sql: SqlDialect): string | undefined {
   const keys = (node.sortKey ?? []).map(sortKeyColumn);
   if (keys.length === 0 || keys.some((key) => key === undefined)) return undefined;
   const scans = descendants(node, nodes).filter(isTableScan);
@@ -21,7 +22,7 @@ function sortIndex(node: PlanNode, nodes: PlanNode[]): string | undefined {
   );
   const [relation] = owners;
   if (owners.size !== 1 || !relation) return undefined;
-  return createIndex(relation, keys.map((key) => `${key?.name ?? ''}${key?.order ?? ''}`));
+  return sql.createIndex(relation, keys.map((key) => `${key?.name ?? ''}${key?.order ?? ''}`));
 }
 
 export const sortDiskRule: Rule = {
@@ -32,7 +33,8 @@ export const sortDiskRule: Rule = {
       .map((node) => {
         const diskKb = node.sortDiskKb ?? 0;
         const workMem = workMemFor(diskKb * thresholds.sortDisk.workMemFactor);
-        const index = sortIndex(node, ctx.nodes);
+        const setWorkMem = ctx.sql.setWorkMem(workMem);
+        const index = sortIndex(node, ctx.nodes, ctx.sql);
         return {
           rule: 'sort-disk' as const,
           severity: 'alert' as const,
@@ -40,11 +42,11 @@ export const sortDiskRule: Rule = {
           impactMs: node.selfMs,
           data: {
             diskKb,
-            workMem,
+            workMem: setWorkMem ? workMem : '',
             sortKey: (node.sortKey ?? []).join(', '),
             timeShare: node.selfShare,
           },
-          sql: [setWorkMem(workMem), ...(index ? [index] : [])],
+          sql: [setWorkMem, index].filter((line): line is string => line !== undefined),
         };
       });
   },

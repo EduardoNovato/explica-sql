@@ -35,23 +35,38 @@ export default function Summary({ analysis, strings, locale, onShowNode }: Props
   const counts = (['alert', 'warning', 'note'] as Severity[])
     .map((severity) => ({ severity, n: analysis.findings.filter((finding) => finding.severity === severity).length }))
     .filter(({ n }) => n > 0);
+  // A-Time de Oracle va de 10 en 10 ms: lo que no supera esa precisión se muestra como "≤ 10 ms"
+  const duration = (ms: number) =>
+    analysis.timeResolutionMs !== undefined && ms <= analysis.timeResolutionMs
+      ? t.atMost.replace('{time}', formatMs(analysis.timeResolutionMs, locale))
+      : formatMs(ms, locale);
+  const { rowsRead, blocksRead } = analysis.metrics;
 
   return (
     <div>
+      <p className="mb-3">
+        <span className="inline-flex items-center rounded-md border border-line px-2 py-0.5 font-mono text-[11px] text-muted">
+          {t.dialect[analysis.dialect]}
+        </span>
+      </p>
       <div className="flex flex-wrap items-baseline gap-x-5 gap-y-2">
         <p className={`font-serif text-[clamp(2.5rem,10vw,3.75rem)] leading-none ${analysis.verdict ? verdictColor[analysis.verdict] : 'text-muted'}`}>
           {analysis.verdict ? strings.verdict[analysis.verdict] : t.estimatesOnly}
         </p>
-        {analysis.hasAnalyze && <p className="font-mono text-xl text-ink tabular-nums sm:text-2xl">{formatMs(analysis.totalMs, locale)}</p>}
+        {analysis.hasAnalyze && <p className="font-mono text-xl text-ink tabular-nums sm:text-2xl">{duration(analysis.totalMs)}</p>}
       </div>
 
       <dl className="theme-fade mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-4">
-        <Metric label={t.execution}>{analysis.executionMs === undefined ? dash : formatMs(analysis.executionMs, locale)}</Metric>
+        <Metric label={t.execution}>{analysis.executionMs === undefined ? dash : duration(analysis.executionMs)}</Metric>
         <Metric label={t.planning}>{analysis.planningMs === undefined ? dash : formatMs(analysis.planningMs, locale)}</Metric>
         <Metric label={t.rowsReturned}>
           {analysis.metrics.rowsReturned === undefined ? dash : formatCount(analysis.metrics.rowsReturned, locale)}
         </Metric>
-        <Metric label={t.rowsRead}>{analysis.metrics.rowsRead === undefined ? dash : formatCount(analysis.metrics.rowsRead, locale)}</Metric>
+        {blocksRead !== undefined && rowsRead === undefined ? (
+          <Metric label={t.blocksRead}>{formatCount(blocksRead, locale)}</Metric>
+        ) : (
+          <Metric label={t.rowsRead}>{rowsRead === undefined ? dash : formatCount(rowsRead, locale)}</Metric>
+        )}
         <Metric label={t.slowest} wide>
           {slowest ? (
             <button

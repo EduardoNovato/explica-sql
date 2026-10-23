@@ -1,5 +1,5 @@
 import { functionCalls } from '../expression';
-import { bareName, ownColumns, plainColumns } from '../sql';
+import { ownColumns, plainColumns } from '../sql';
 import { thresholds } from '../thresholds';
 import { ancestors, childrenOf, descendants, isTableScan } from '../tree';
 import type { PlanNode, Rule } from '../types';
@@ -22,7 +22,7 @@ const isMisestimated = (node: PlanNode) => errorFactor(node) >= thresholds.mises
 
 /** Nodos que pueden dejar de pedir filas antes de tiempo: abajo de ellos, leer menos de lo estimado es normal */
 function stopsEarly(node: PlanNode): boolean {
-  return node.type === 'Limit' || node.type === 'Merge Join' || /Semi|Anti/.test(node.joinType ?? '');
+  return node.kind === 'limit' || node.kind === 'merge-join' || /Semi|Anti/i.test(node.joinType ?? '') || /STOPKEY/.test(node.type);
 }
 
 export const misestimateRule: Rule = {
@@ -33,8 +33,11 @@ export const misestimateRule: Rule = {
         if (!isMisestimated(node) || !node.estimate || !node.actual) return false;
         if (node.actual.rows * node.actual.loops < thresholds.misestimate.minActualRows) return false;
         if (childrenOf(node, ctx.nodes).some(isMisestimated)) return false;
+        const above = [...ancestors(node, ctx.nodes)].map(({ ancestor }) => ancestor);
+        // En la parte paralela de Oracle (bajo PX), E-Rows es el total y no por ejecución: no se puede comparar
+        if (ctx.dialect === 'oracle' && above.some((ancestor) => ancestor.kind === 'gather')) return false;
         const overestimated = node.estimate.rows > node.actual.rows;
-        return !(overestimated && [...ancestors(node, ctx.nodes)].some(({ ancestor }) => stopsEarly(ancestor)));
+        return !(overestimated && above.some(stopsEarly));
       })
       .map((node) => {
         const loops = node.actual?.loops ?? 1;
@@ -45,12 +48,9 @@ export const misestimateRule: Rule = {
         const tables = isTableScan(node) ? [node] : descendants(node, ctx.nodes).filter(isTableScan).slice(0, 3);
 
         const sql: string[] = [];
-        const columns = isTableScan(node) && !withFunctions ? plainColumns(ownColumns(node, condition)) : [];
-        if (node.relation && columns.length >= 2) {
-          const name = `${bareName(node.relation)}_${columns.map((column) => column.replace(/"/g, '')).join('_')}_stats`;
-          sql.push(`CREATE STATISTICS ${name} (dependencies) ON ${columns.join(', ')} FROM ${node.relation};`);
-        }
-        for (const table of new Set(tables.map((scan) => scan.relation))) if (table) sql.push(`ANALYZE ${table};`);
+        const columns = isTableScan(node) && !withFunctions ? plainColumns(ownColumns(node, condition, ctx.sql)) : [];
+        if (node.relation && columns.length >= 2) sql.push(ctx.sql.extendedStats(node.relation, columns));
+        for (const table of new Set(tables.map((scan) => scan.relation))) if (table) sql.push(ctx.sql.gatherStats(table));
 
         return {
           rule: 'misestimate' as const,

@@ -3,10 +3,17 @@ import type { Notice, ParsedPlan } from './types';
 
 /**
  * Avisos de contexto: no son problemas de la consulta sino de cómo se midió.
- * Falta ANALYZE (solo hay estimaciones), falta BUFFERS, workers planeados que no arrancaron y
- * planificación más lenta que la ejecución.
+ *
+ * - PostgreSQL: falta ANALYZE (solo hay estimaciones), falta BUFFERS, workers planeados que no
+ *   arrancaron y planificación más lenta que la ejecución.
+ * - Oracle: faltan las estadísticas de ejecución (GATHER_PLAN_STATISTICS), Oracle muestreó porque
+ *   faltan estadísticas de tablas, el plan es paralelo o el cliente trajo solo una página de filas.
  */
 export function contextNotices(plan: ParsedPlan, hasAnalyze: boolean, hasBuffers: boolean): Notice[] {
+  return plan.dialect === 'oracle' ? oracleNotices(plan, hasAnalyze) : postgresNotices(plan, hasAnalyze, hasBuffers);
+}
+
+function postgresNotices(plan: ParsedPlan, hasAnalyze: boolean, hasBuffers: boolean): Notice[] {
   const notices: Notice[] = [];
   if (!hasAnalyze) notices.push({ id: 'no-analyze', data: {} });
   else if (!hasBuffers) notices.push({ id: 'no-buffers', data: {} });
@@ -27,6 +34,28 @@ export function contextNotices(plan: ParsedPlan, hasAnalyze: boolean, hasBuffers
     planningMs >= thresholds.slowPlanning.minPlanningMs
   ) {
     notices.push({ id: 'slow-planning', data: { planningMs, executionMs } });
+  }
+  return notices;
+}
+
+function oracleNotices(plan: ParsedPlan, hasAnalyze: boolean): Notice[] {
+  const notices: Notice[] = [];
+  if (!hasAnalyze) notices.push({ id: 'oracle-no-stats', data: {} });
+  if (plan.oracle?.dynamicSampling) notices.push({ id: 'oracle-dynamic-sampling', data: {} });
+  if (plan.nodes.some((node) => node.type.startsWith('PX '))) notices.push({ id: 'oracle-parallel', data: {} });
+
+  const [root] = plan.nodes;
+  const first = root?.children[0] === undefined ? undefined : plan.nodes[root.children[0]];
+  const fetched = root?.actual?.rows;
+  const expected = first?.estimate?.rows;
+  const limits = thresholds.oraclePartialFetch;
+  if (
+    fetched !== undefined &&
+    expected !== undefined &&
+    (limits.fetchSizes as readonly number[]).includes(fetched) &&
+    expected >= fetched * limits.minEstimateFactor
+  ) {
+    notices.push({ id: 'oracle-partial-fetch', data: { rows: fetched } });
   }
   return notices;
 }

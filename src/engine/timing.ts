@@ -1,6 +1,6 @@
 import type { PlanNode } from './types';
 
-const isGather = (node: PlanNode) => node.type === 'Gather' || node.type === 'Gather Merge';
+const isGather = (node: PlanNode) => node.kind === 'gather';
 
 /**
  * Llena el tiempo con hijos, el tiempo propio y su fracción del total en cada nodo.

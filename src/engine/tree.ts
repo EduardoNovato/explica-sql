@@ -1,18 +1,9 @@
-import type { PlanNode } from './types';
+import type { NodeKind, PlanNode } from './types';
 
-/** Escaneos que leen filas de una tabla (no de otro nodo, como CTE Scan o Subquery Scan) */
-const TABLE_SCANS = new Set([
-  'Seq Scan',
-  'Index Scan',
-  'Index Only Scan',
-  'Bitmap Heap Scan',
-  'Tid Scan',
-  'Tid Range Scan',
-  'Sample Scan',
-  'Foreign Scan',
-]);
+/** Pasos que leen filas de una tabla (no de otro nodo, como CTE Scan o una vista) */
+const TABLE_READS: NodeKind[] = ['full-scan', 'table-access', 'index-scan'];
 
-export const isTableScan = (node: PlanNode) => TABLE_SCANS.has(node.type) && node.relation !== undefined;
+export const isTableScan = (node: PlanNode) => TABLE_READS.includes(node.kind) && node.relation !== undefined;
 
 export const childrenOf = (node: PlanNode, nodes: PlanNode[]) =>
   node.children.map((id) => nodes[id]).filter((child): child is PlanNode => child !== undefined);

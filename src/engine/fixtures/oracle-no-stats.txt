@@ -1,0 +1,24 @@
+SQL_ID  9h3sd7q2m4fpx, child number 0
+-------------------------------------
+SELECT o_orderkey FROM orders WHERE o_custkey = 74221
+
+Plan hash value: 1956454139
+
+-------------------------------------------
+| Id  | Operation         | Name   | E-Rows |
+-------------------------------------------
+|   0 | SELECT STATEMENT  |        |        |
+|*  1 |  TABLE ACCESS FULL| ORDERS |     15 |
+-------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - filter("O_CUSTKEY"=74221)
+
+Note
+-----
+   - Warning: basic plan statistics not available. These are only collected when:
+       * hint 'gather_plan_statistics' is used for the statement or
+       * parameter 'statistics_level' is set to 'ALL', at session or system level
+

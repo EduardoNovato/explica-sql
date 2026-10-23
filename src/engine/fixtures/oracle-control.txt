@@ -1,0 +1,19 @@
+SQL_ID  7mw2p5kq0cjzv, child number 0
+-------------------------------------
+SELECT /*+ GATHER_PLAN_STATISTICS */ * FROM pedidos_estado WHERE estado
+= 'pagado'
+
+Plan hash value: 1129745530
+
+-----------------------------------------------------------------------------------------------
+| Id  | Operation         | Name           | Starts | E-Rows | A-Rows |   A-Time   | Buffers |
+-----------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT  |                |      1 |        |      3 |00:00:00.01 |       7 |
+|*  1 |  TABLE ACCESS FULL| PEDIDOS_ESTADO |      1 |      3 |      3 |00:00:00.01 |       7 |
+-----------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - filter("ESTADO"='pagado')
+

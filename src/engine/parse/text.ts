@@ -1,5 +1,5 @@
 import type { ParseResult, PlanNode } from '../types';
-import { describeLabel, emptyNode, parseBuffers, splitTopLevel } from './node';
+import { describeLabel, emptyNode, parseBuffers, postgresKind, splitTopLevel } from './node';
 
 const NUM = String.raw`\d+(?:\.\d+)?`;
 const COST = String.raw`\(cost=(${NUM})\.\.(${NUM}) rows=(${NUM}) width=(\d+)\)`;
@@ -80,7 +80,7 @@ export function parseTextPlan(lines: string[]): ParseResult {
   }
 
   if (nodes.length === 0) return { ok: false, error: 'not-a-plan' };
-  return { ok: true, plan: { format: 'text', nodes, planningMs, executionMs } };
+  return { ok: true, plan: { format: 'text', dialect: 'postgres', nodes, planningMs, executionMs } };
 }
 
 function parseNodeLine(content: string, id: number): PlanNode | undefined {
@@ -89,6 +89,7 @@ function parseNodeLine(content: string, id: number): PlanNode | undefined {
   const [, label = content, startupCost, totalCost, rows, width, startupMs, totalMs, actualRows, loops, never] = match;
   const node = emptyNode(id, label);
   Object.assign(node, describeLabel(label));
+  node.kind = postgresKind(node.type);
   if (totalCost !== undefined) {
     node.estimate = {
       startupCost: Number(startupCost),

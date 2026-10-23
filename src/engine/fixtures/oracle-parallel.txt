@@ -1,0 +1,23 @@
+SQL_ID  6sv1f0k8y2q4n, child number 0
+-------------------------------------
+SELECT /*+ GATHER_PLAN_STATISTICS PARALLEL(4) */ COUNT(*) FROM lineitem
+
+Plan hash value: 2903451877
+
+-------------------------------------------------------------------------------------------------------------
+| Id  | Operation              | Name     | Starts | E-Rows | A-Rows |   A-Time   | Buffers |    TQ  |IN-OUT|
+-------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT       |          |      1 |        |      1 |00:00:00.85 |       5 |        |      |
+|   1 |  SORT AGGREGATE        |          |      1 |      1 |      1 |00:00:00.85 |       5 |        |      |
+|   2 |   PX COORDINATOR       |          |      1 |        |      4 |00:00:00.85 |       5 |        |      |
+|   3 |    PX SEND QC (RANDOM) | :TQ10000 |      0 |      1 |      0 |00:00:00.01 |       0 |  Q1,00 | P->S |
+|   4 |     SORT AGGREGATE     |          |      4 |      1 |      4 |00:00:03.20 |     110K|  Q1,00 | PCWP |
+|   5 |      PX BLOCK ITERATOR |          |      4 |   6001K|   6001K|00:00:02.10 |     110K|  Q1,00 | PCWC |
+|*  6 |       TABLE ACCESS FULL| LINEITEM |     68 |   6001K|   6001K|00:00:01.60 |     110K|  Q1,00 | PCWP |
+-------------------------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   6 - access(:Z>=:Z AND :Z<=:Z)
+

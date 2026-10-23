@@ -1,7 +1,8 @@
 /**
- * Deja solo las líneas del plan, sin lo que agregan los clientes SQL: el encabezado `QUERY PLAN`,
- * los separadores y el conteo de filas de psql, el `+` de continuación de psql, los bordes `|` de la
- * vista de texto de DBeaver y las comillas de pgAdmin. Conserva la sangría: de ella sale el árbol.
+ * Deja solo las líneas del plan, sin lo que agregan los clientes SQL: el encabezado `QUERY PLAN`
+ * (o `PLAN_TABLE_OUTPUT` de Oracle), los separadores y el conteo de filas de psql, el `+` de
+ * continuación de psql, los bordes `|` de la vista de texto de DBeaver y las comillas de pgAdmin.
+ * Conserva la sangría: de ella sale el árbol.
  *
  * Ojo: nada de expresiones como `\s+$` sobre la línea completa. Con sangrías largas (planes
  * profundos) se vuelven cuadráticas; se usa trimEnd y comparaciones directas.
@@ -39,6 +40,6 @@ function unquote(line: string): string {
 }
 
 // Reciben la línea ya recortada
-const isHeader = (text: string) => /^"?QUERY PLAN"?$/i.test(text);
+const isHeader = (text: string) => /^"?(QUERY PLAN|PLAN_TABLE_OUTPUT)"?$/i.test(text);
 const isSeparator = (text: string) => /^-{3,}[-+]*$/.test(text);
 const isRowCount = (text: string) => /^\(\d+ rows?\)$/.test(text);

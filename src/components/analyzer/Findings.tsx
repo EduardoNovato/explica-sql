@@ -1,8 +1,8 @@
-import type { Analysis, Finding } from '../../engine';
+import type { Analysis, Dialect, Finding } from '../../engine';
 import CopyButton from './CopyButton';
 import { ArrowIcon, TargetIcon } from './icons';
 import type { AnalyzerStrings } from './strings';
-import { fill, findingTemplates, severityStyles } from './text';
+import { fill, findingHint, findingTemplates, severityStyles } from './text';
 
 interface Props {
   analysis: Analysis;
@@ -32,6 +32,7 @@ export default function Findings({ analysis, strings, locale, flashed, onHighlig
               index={index}
               finding={finding}
               strings={strings}
+              dialect={analysis.dialect}
               locale={locale}
               flashed={flashed === index}
               onHighlight={onHighlight}
@@ -48,17 +49,18 @@ interface CardProps {
   index: number;
   finding: Finding;
   strings: AnalyzerStrings;
+  dialect: Dialect;
   locale: string;
   flashed: boolean;
   onHighlight: (ids: number[] | null) => void;
   onShowNode: (id: number) => void;
 }
 
-function FindingCard({ index, finding, strings, locale, flashed, onHighlight, onShowNode }: CardProps) {
+function FindingCard({ index, finding, strings, dialect, locale, flashed, onHighlight, onShowNode }: CardProps) {
   const t = strings.analysis;
   const rule = strings.rules[finding.rule];
-  const { body, fix } = findingTemplates(finding, rule);
-  const hint = typeof finding.data.hint === 'string' ? strings.hints[finding.data.hint] : undefined;
+  const { body, fix } = findingTemplates(finding, rule, dialect);
+  const hint = findingHint(finding, strings.hints, dialect);
   const ids = [finding.nodeId, ...(finding.relatedNodeIds ?? [])];
   const style = severityStyles[finding.severity];
 

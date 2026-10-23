@@ -21,8 +21,9 @@ interface Token {
   end: number;
 }
 
+/** `$1` en PostgreSQL; `:B1`, `:SYS_B_0` o `:Z` (variables de enlace) en Oracle */
 const TOKEN =
-  /\s+|'(?:[^']|'')*'|"(?:[^"]|"")*"|[A-Za-z_][\w$]*|\$\d+|\d+(?:\.\d+)?|::|[(),.[\]]|[^\s\w'"(),.[\]$]+|./gy;
+  /\s+|'(?:[^']|'')*'|"(?:[^"]|"")*"|[A-Za-z_][\w$#]*|\$\d+|\d+(?:\.\d+)?|::|:\w+|[(),.[\]]|[^\s\w'"(),.[\]$:]+|./gy;
 
 function tokenize(expr: string): Token[] {
   const tokens: Token[] = [];
@@ -37,7 +38,7 @@ function tokenize(expr: string): Token[] {
     if (first === "'") kind = 'string';
     else if (first === '"') kind = 'quoted';
     else if (/[A-Za-z_]/.test(first)) kind = 'word';
-    else if (first === '$') kind = 'param';
+    else if (first === '$' || (first === ':' && text !== '::' && text.length > 1)) kind = 'param';
     else if (/\d/.test(first)) kind = 'number';
     else if (text === '::') kind = 'cast';
     else if ('(),.[]'.includes(text)) kind = 'punct';
@@ -52,6 +53,8 @@ const KEYWORDS = new Set([
   'BETWEEN', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 'DESC', 'ASC', 'NULLS', 'FIRST', 'LAST', 'ARRAY', 'ROW',
   'EXISTS', 'DISTINCT', 'FROM', 'COLLATE', 'ESCAPE', 'AT', 'TIME', 'ZONE', 'INTERVAL', 'USING',
   'SubPlan', 'InitPlan', 'hashed', 'returns', 'alternatives',
+  // Pseudocolumnas y valores de Oracle
+  'ROWNUM', 'ROWID', 'SYSDATE', 'SYSTIMESTAMP', 'LEVEL', 'PRIOR',
 ]);
 
 const TYPE_WORDS = new Set(['varying', 'without', 'with', 'time', 'zone', 'precision']);

@@ -1,19 +1,26 @@
 # Explica SQL
 
-Pega el resultado de `EXPLAIN ANALYZE` de PostgreSQL y en milisegundos te dice si la consulta es lenta,
-dónde se va el tiempo y qué hacer, con el SQL listo para copiar. En español e inglés.
+Pega el plan de ejecución de tu consulta, el `EXPLAIN ANALYZE` de PostgreSQL o el `DBMS_XPLAN` de Oracle,
+y en milisegundos te dice si es lenta, dónde se va el tiempo y qué hacer, con el SQL listo para copiar.
+En español e inglés.
 
 > **Estado:** en construcción. Ya se puede pegar un plan, ver el veredicto, el árbol y los hallazgos
 > con el SQL para copiar, y compartir el resultado con un link temporal. Falta publicarla.
 
 ## Cómo se usa
 
-1. Ejecuta tu consulta con `EXPLAIN (ANALYZE, BUFFERS) SELECT …` en psql, DBeaver o pgAdmin.
-2. Pega el resultado (texto o JSON) en la página: se analiza al pegarlo.
+1. Ejecuta tu consulta:
+   - **PostgreSQL:** `EXPLAIN (ANALYZE, BUFFERS) SELECT …` en psql, DBeaver o pgAdmin.
+   - **Oracle:** la consulta con el hint `/*+ GATHER_PLAN_STATISTICS */` y, en la misma sesión,
+     `SELECT * FROM TABLE(DBMS_XPLAN.DISPLAY_CURSOR(NULL, NULL, 'ALLSTATS LAST +ALIAS'))`.
+     La guía `/oracle/` explica permisos, clientes y columnas.
+2. Pega el resultado en la página: detecta solo si es PostgreSQL (texto o JSON) u Oracle, y se analiza
+   al pegarlo.
 3. Revisa el veredicto, el árbol con el tiempo propio de cada paso y los hallazgos, cada uno con qué
    hacer y el SQL listo para copiar. Cada regla tiene su página de explicación en `/reglas/`.
 
-Para ver un ejemplo sin pegar nada, abre la página con `#ejemplo` al final de la dirección.
+Para ver un ejemplo sin pegar nada, abre la página con `#ejemplo` (o `#ejemplo-oracle`) al final de la
+dirección.
 
 El análisis corre en tu navegador: el plan no sale de tu computadora.
 
@@ -31,6 +38,22 @@ Los links viven en Redis de [Upstash](https://upstash.com) con TTL. Para activar
 `.env.example` a `.env` y llena `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN` (o conecta Upstash
 desde el Marketplace de Vercel, que crea `KV_REST_API_URL` y `KV_REST_API_TOKEN`). Sin esas variables,
 `npm run dev` guarda los links en memoria.
+
+## Oracle
+
+Oracle no tiene `EXPLAIN ANALYZE`: su equivalente son las estadísticas reales de cada paso que muestra
+`DBMS_XPLAN.DISPLAY_CURSOR` con `ALLSTATS LAST` (Starts, E-Rows, A-Rows, A-Time, Buffers, Reads,
+Used-Tmp). Explica SQL lee ese texto y aplica las mismas reglas, con lo que cambia en Oracle:
+
+- A-Rows y A-Time son totales de todas las ejecuciones; se comparan por ejecución con E-Rows.
+- Oracle no dice cuántas filas descartó un escaneo: la regla 1 mira los bloques leídos por fila devuelta.
+- A-Time va de 10 en 10 ms, así que lo que no pasa de 10 ms cuenta como rápido.
+- El SQL sugerido usa sintaxis de Oracle: índices con nombre y `DBMS_STATS`. No se sugiere memoria por
+  sesión, porque la PGA la reparte el servidor.
+- Avisa si faltan las estadísticas de ejecución, si Oracle muestreó por falta de estadísticas, si el plan
+  es paralelo o si el cliente trajo solo la primera página de filas.
+
+También lee `EXPLAIN PLAN` + `DBMS_XPLAN.DISPLAY`, pero eso solo trae estimaciones.
 
 ## Qué revisa
 
@@ -70,7 +93,7 @@ npm run build
 ```
 src/
   engine/      motor de análisis: TypeScript puro, sin dependencias de interfaz
-    parse/     lectores de texto y JSON
+    parse/     lectores de PostgreSQL (texto y JSON) y de Oracle (DBMS_XPLAN)
     rules/     una regla por archivo, con su prueba al lado
     thresholds.ts  todos los umbrales en un solo lugar
   components/  componentes Astro; analyzer/ es la isla de React con el resultado

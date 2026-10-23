@@ -10,16 +10,40 @@ export interface Buffers {
   tempWritten: number;
 }
 
-/** Un nodo del plan. `actual` y las filas van por vuelta (`loops`), igual que en EXPLAIN. */
+/** Motor de base de datos que generó el plan */
+export type Dialect = 'postgres' | 'oracle';
+
+/**
+ * Qué hace el paso, igual para los dos motores: así las reglas no dependen de los nombres de
+ * PostgreSQL (`Seq Scan`) ni de Oracle (`TABLE ACCESS FULL`).
+ */
+export type NodeKind =
+  | 'full-scan'
+  | 'table-access'
+  | 'index-scan'
+  | 'nested-loop'
+  | 'hash-join'
+  | 'merge-join'
+  | 'hash'
+  | 'hash-aggregate'
+  | 'sort'
+  | 'limit'
+  | 'gather'
+  | 'result'
+  | 'statement'
+  | 'other';
+
+/** Un nodo del plan. `actual` y las filas van por vuelta (`loops`), igual que en EXPLAIN de PostgreSQL. */
 export interface PlanNode {
   id: number;
   parentId?: number;
   children: number[];
   depth: number;
 
-  /** Tipo normalizado: `Seq Scan`, `Hash Join`, `HashAggregate`… (sin `Parallel`, `Partial` ni tipo de join) */
+  /** Tipo como lo nombra el motor, normalizado: `Seq Scan`, `Hash Join`, `TABLE ACCESS FULL`… */
   type: string;
-  /** Encabezado como lo muestra PostgreSQL: `Parallel Seq Scan on orders o` */
+  kind: NodeKind;
+  /** Encabezado como lo muestra el motor: `Parallel Seq Scan on orders o`, `TABLE ACCESS FULL · ORDERS` */
   label: string;
   parallel: boolean;
   joinType?: string;
@@ -50,6 +74,7 @@ export interface PlanNode {
   hashBatches?: number;
   hashOriginalBatches?: number;
   memoryKb?: number;
+  /** Lo que un hash bajó a disco (HashAggregate en PostgreSQL, `Used-Tmp` de un hash en Oracle) */
   diskKb?: number;
   workersPlanned?: number;
   workersLaunched?: number;
@@ -68,12 +93,24 @@ export interface PlanNode {
 
 export type PlanFormat = 'text' | 'json';
 
+/** Lo que dice la sección `Note` de un plan de Oracle */
+export interface OracleNotes {
+  /** Faltan las estadísticas de ejecución (no se usó GATHER_PLAN_STATISTICS) */
+  noRuntimeStats: boolean;
+  /** Oracle muestreó porque faltan estadísticas de alguna tabla */
+  dynamicSampling: boolean;
+}
+
 export interface ParsedPlan {
   format: PlanFormat;
+  dialect: Dialect;
   /** En preorden: `nodes[0]` es la raíz y `nodes[n].id === n` */
   nodes: PlanNode[];
   planningMs?: number;
   executionMs?: number;
+  /** Precisión de los tiempos cuando es gruesa (A-Time de Oracle: 10 ms) */
+  timeResolutionMs?: number;
+  oracle?: OracleNotes;
 }
 
 export type ParseError = 'empty' | 'not-a-plan' | 'invalid-json' | 'no-indentation';
@@ -110,7 +147,15 @@ export interface Finding {
   sql: string[];
 }
 
-export type NoticeId = 'no-analyze' | 'no-buffers' | 'workers-not-launched' | 'slow-planning';
+export type NoticeId =
+  | 'no-analyze'
+  | 'no-buffers'
+  | 'workers-not-launched'
+  | 'slow-planning'
+  | 'oracle-no-stats'
+  | 'oracle-dynamic-sampling'
+  | 'oracle-parallel'
+  | 'oracle-partial-fetch';
 
 export interface Notice {
   id: NoticeId;
@@ -120,19 +165,25 @@ export interface Notice {
 
 export interface Analysis {
   format: PlanFormat;
+  dialect: Dialect;
   rulesVersion: number;
   nodes: PlanNode[];
   planningMs?: number;
   executionMs?: number;
   /** Tiempo de referencia para los porcentajes */
   totalMs: number;
+  /** Precisión de los tiempos cuando es gruesa (A-Time de Oracle: 10 ms) */
+  timeResolutionMs?: number;
   hasAnalyze: boolean;
   hasBuffers: boolean;
   /** Sin `ANALYZE` no hay tiempos reales y no se da veredicto */
   verdict?: Verdict;
   metrics: {
     slowestNodeId?: number;
+    /** Filas que leyeron los escaneos (PostgreSQL; Oracle no dice cuántas descartó) */
     rowsRead?: number;
+    /** Bloques leídos en total (Oracle, en lugar de filas leídas) */
+    blocksRead?: number;
     rowsReturned?: number;
   };
   findings: Finding[];
@@ -141,10 +192,24 @@ export interface Analysis {
 
 export type AnalyzeResult = { ok: true; analysis: Analysis } | { ok: false; error: ParseError };
 
+/** Cómo se escribe el SQL sugerido en cada motor */
+export interface SqlDialect {
+  createIndex(relation: string, columns: string[]): string;
+  createExpressionIndex(relation: string, expression: string): string;
+  /** `undefined` si el motor no permite cambiar la memoria de trabajo por sesión */
+  setWorkMem(value: string): string | undefined;
+  gatherStats(relation: string): string;
+  extendedStats(relation: string, columns: string[]): string;
+  /** Quita comillas que el motor agrega solo, para mostrar y sugerir nombres limpios */
+  cleanIdentifier(name: string): string;
+}
+
 /** Lo que recibe cada regla */
 export interface RuleContext {
   nodes: PlanNode[];
   totalMs: number;
+  dialect: Dialect;
+  sql: SqlDialect;
 }
 
 export interface Rule {

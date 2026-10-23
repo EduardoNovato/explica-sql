@@ -1,0 +1,24 @@
+SQL_ID  5qmh7y2kwz9c1, child number 0
+-------------------------------------
+SELECT /*+ GATHER_PLAN_STATISTICS */ o_orderkey, o_totalprice FROM
+orders WHERE o_custkey = 74221
+
+Plan hash value: 1956454139
+
+---------------------------------------------------------------------------------------------
+| Id  | Operation         | Name   | Starts | E-Rows | A-Rows |   A-Time   | Buffers | Reads  |
+---------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT  |        |      1 |        |     14 |00:00:00.19 |   25076 |  23028 |
+|*  1 |  TABLE ACCESS FULL| ORDERS |      1 |     15 |     14 |00:00:00.19 |   25076 |  23028 |
+---------------------------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$1 / "ORDERS"@"SEL$1"
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - filter("O_CUSTKEY"=74221)
+

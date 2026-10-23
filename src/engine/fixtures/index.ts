@@ -1,7 +1,17 @@
 // Planes de prueba. Todos usan tablas inventadas (pedidos, clientes, facturas) o tablas de TPC-H.
+// Los de Oracle siguen el texto de DBMS_XPLAN.DISPLAY_CURSOR con 'ALLSTATS LAST +ALIAS'.
 import { analyze } from '../index';
 import type { Analysis } from '../types';
 import control from './control.txt?raw';
+import oracleControl from './oracle-control.txt?raw';
+import oracleDbeaverPartial from './oracle-dbeaver-partial.txt?raw';
+import oracleEstimates from './oracle-estimates.txt?raw';
+import oracleFullScan from './oracle-full-scan.txt?raw';
+import oracleHashSort from './oracle-hash-sort.txt?raw';
+import oracleImplicitConversion from './oracle-implicit-conversion.txt?raw';
+import oracleNestedLoop from './oracle-nested-loop.txt?raw';
+import oracleNoStats from './oracle-no-stats.txt?raw';
+import oracleParallel from './oracle-parallel.txt?raw';
 import controlDbeaverText from './control-dbeaver-texto.txt?raw';
 import controlPgadmin from './control-pgadmin.txt?raw';
 import controlPsql from './control-psql.txt?raw';
@@ -37,6 +47,15 @@ export const plans = {
   seqScan,
   subplans,
   summarySections,
+  oracleControl,
+  oracleDbeaverPartial,
+  oracleEstimates,
+  oracleFullScan,
+  oracleHashSort,
+  oracleImplicitConversion,
+  oracleNestedLoop,
+  oracleNoStats,
+  oracleParallel,
 };
 
 /** Analiza y falla la prueba si el plan no se pudo leer */

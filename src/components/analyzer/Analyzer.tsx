@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { analyze, type AnalyzeResult } from '../../engine';
 import example from '../../engine/fixtures/hash-sort.txt?raw';
+import oracleExample from '../../engine/fixtures/oracle-hash-sort.txt?raw';
 import { plural } from '../../i18n/format';
 import type { ShareLang } from '../../share/config';
 import Findings from './Findings';
@@ -75,19 +76,28 @@ export default function Analyzer({ strings, lang, locale, labelledBy, describedB
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan]);
 
-  // `#ejemplo` (o `#example`) en la URL abre la página con el ejemplo ya analizado: sirve como link de demo
+  // `#ejemplo` / `#example` (o `#ejemplo-oracle` / `#oracle-example`) en la URL abre la página con
+  // el ejemplo ya analizado: sirve como link de demo
   useEffect(() => {
     if (shared) return;
     const loadFromHash = () => {
-      if (!['#ejemplo', '#example'].includes(window.location.hash)) return;
-      setPlan(example);
-      run(example, 'none');
+      const hash = window.location.hash;
+      const text = ['#ejemplo', '#example'].includes(hash) ? example : ['#ejemplo-oracle', '#oracle-example'].includes(hash) ? oracleExample : undefined;
+      if (!text) return;
+      setPlan(text);
+      run(text, 'none');
     };
     loadFromHash();
     window.addEventListener('hashchange', loadFromHash);
     return () => window.removeEventListener('hashchange', loadFromHash);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Avisa qué motor tiene el plan pegado: el paso 1 cambia a esa pestaña (src/scripts/tabs.ts)
+  const dialect = analysis?.dialect;
+  useEffect(() => {
+    if (dialect) window.dispatchEvent(new CustomEvent('explica-sql:dialect', { detail: dialect }));
+  }, [dialect]);
 
   useEffect(() => {
     if (flashedNode === null && flashedFinding === undefined) return;
@@ -113,9 +123,12 @@ export default function Analyzer({ strings, lang, locale, labelledBy, describedB
     }
   };
 
+  /** El ejemplo es del motor elegido en las pestañas del paso 1 */
   const loadExample = () => {
-    setPlan(example);
-    run(example, 'focus');
+    const engine = document.querySelector<HTMLElement>('[role="tab"][aria-selected="true"]')?.dataset.engine;
+    const text = engine === 'oracle' ? oracleExample : example;
+    setPlan(text);
+    run(text, 'focus');
   };
 
   const clear = () => {

@@ -1,6 +1,12 @@
 import { thresholds } from '../thresholds';
 import { childrenOf } from '../tree';
-import type { Rule } from '../types';
+import type { NodeKind, Rule } from '../types';
+
+/**
+ * Solo los pasos que leen tablas o índices. En Oracle, `Reads` también cuenta lo que un SORT o un
+ * HASH JOIN relee de su espacio temporal, y eso ya lo explican las reglas 3 y 4.
+ */
+const READS_OBJECTS: NodeKind[] = ['full-scan', 'table-access', 'index-scan'];
 
 /** Tamaño de un bloque de PostgreSQL en kB */
 const BLOCK_KB = 8;
@@ -14,7 +20,7 @@ export const diskReadsRule: Rule = {
   id: 'disk-reads',
   check(ctx) {
     return ctx.nodes.flatMap((node) => {
-      if (!node.buffers) return [];
+      if (!node.buffers || !READS_OBJECTS.includes(node.kind)) return [];
       const children = childrenOf(node, ctx.nodes);
       const read = Math.max(0, node.buffers.sharedRead - children.reduce((sum, child) => sum + (child.buffers?.sharedRead ?? 0), 0));
       const hit = Math.max(0, node.buffers.sharedHit - children.reduce((sum, child) => sum + (child.buffers?.sharedHit ?? 0), 0));

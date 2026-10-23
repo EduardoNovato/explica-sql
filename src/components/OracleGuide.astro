@@ -1,0 +1,120 @@
+---
+import { oracleGuide } from '../i18n/oracle';
+import { languages, type Lang } from '../i18n/ui';
+import Page from '../layouts/Page.astro';
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const g = oracleGuide[lang];
+const sectionTitle = 'text-lg font-medium text-ink';
+const paragraph = 'mt-2 leading-relaxed text-pretty text-muted';
+const code =
+  'theme-fade mt-3 overflow-x-auto rounded-xl border border-line-strong bg-surface px-4 py-3.5 font-mono text-[12.5px] leading-[1.7] text-ink [font-variant-ligatures:none]';
+---
+
+<Page
+  lang={lang}
+  title={`${g.title} · Explica SQL`}
+  description={g.description}
+  paths={{ es: languages.es.oraclePath, en: languages.en.oraclePath }}
+  section="oracle"
+>
+  <article class="max-w-3xl">
+    <p class="font-mono text-[13px] text-accent sm:text-sm" translate="no">
+      <span aria-hidden="true">&gt; </span>DBMS_XPLAN
+    </p>
+    <h1 class="mt-4 font-serif text-[clamp(2.5rem,9vw,4rem)] leading-[1.02] tracking-[-0.01em] text-balance text-ink">{g.title}</h1>
+    <p class="mt-5 text-lg leading-relaxed text-pretty text-muted sm:text-xl">{g.lead}</p>
+
+    <section class="mt-12">
+      <h2 class={sectionTitle}>{g.stepsTitle}</h2>
+      <ol class="mt-4 space-y-6">
+        {
+          g.steps.map((step, i) => (
+            <li class="flex gap-3">
+              <span class="mt-0.5 font-mono text-xs text-accent" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <div class="min-w-0 flex-1">
+                <p class="leading-relaxed text-pretty text-muted">{step.text}</p>
+                {step.code && <pre class={code} translate="no">{step.code}</pre>}
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+      <a
+        href={`${languages[lang].path}#${lang === 'es' ? 'ejemplo-oracle' : 'oracle-example'}`}
+        class="mt-6 inline-flex rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-ink transition-opacity hover:opacity-90"
+      >
+        {g.example}
+      </a>
+    </section>
+
+    <section class="mt-12">
+      <h2 class={sectionTitle}>{g.clientsTitle}</h2>
+      <dl class="mt-3 space-y-3">
+        {
+          g.clients.map((client) => (
+            <div>
+              <dt class="text-sm font-medium text-ink">{client.name}</dt>
+              <dd class="mt-0.5 text-sm leading-relaxed text-pretty text-muted">{client.text}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </section>
+
+    <section class="mt-12">
+      <h2 class={sectionTitle}>{g.otherSqlTitle}</h2>
+      <p class={paragraph}>{g.otherSql}</p>
+      <pre class={code} translate="no">{g.otherSqlCode}</pre>
+    </section>
+
+    <section class="mt-12">
+      <h2 class={sectionTitle}>{g.permissionsTitle}</h2>
+      <p class={paragraph}>{g.permissions}</p>
+      <pre class={code} translate="no">{g.permissionsCode}</pre>
+    </section>
+
+    <section class="mt-12">
+      <h2 class={sectionTitle}>{g.estimatesTitle}</h2>
+      <p class={paragraph}>{g.estimates}</p>
+      <pre class={code} translate="no">{g.estimatesCode}</pre>
+    </section>
+
+    <section class="mt-12">
+      <h2 class={sectionTitle}>{g.columnsTitle}</h2>
+      <dl class="theme-fade mt-4 divide-y divide-line overflow-hidden rounded-xl border border-line bg-surface">
+        {
+          g.columns.map((column) => (
+            <div class="grid gap-1 px-4 py-3 sm:grid-cols-[11rem_1fr] sm:gap-4">
+              <dt class="font-mono text-[13px] text-ink" translate="no">
+                {column.name}
+              </dt>
+              <dd class="text-sm leading-relaxed text-muted">{column.text}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </section>
+
+    <section class="mt-12">
+      <h2 class={sectionTitle}>{g.differencesTitle}</h2>
+      <ul class="mt-3 list-disc space-y-2 pl-5 text-pretty text-muted marker:text-accent">
+        {g.differences.map((item) => <li class="leading-relaxed">{item}</li>)}
+      </ul>
+    </section>
+
+    <section class="mt-12 space-y-2 border-t border-line pt-6">
+      {g.notes.map((note) => <p class="text-sm leading-relaxed text-pretty text-muted">{note}</p>)}
+    </section>
+
+    <p class="mt-10 text-sm">
+      <a href={languages[lang].path} class="text-muted hover:text-accent">← {g.back}</a>
+    </p>
+  </article>
+</Page>

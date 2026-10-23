@@ -1,15 +1,26 @@
 import type { ReactNode } from 'react';
-import type { Finding, FindingData, Severity } from '../../engine';
+import type { Dialect, Finding, FindingData, Severity } from '../../engine';
 import { formatCount, formatFactor, formatKb, formatMs, formatPercent } from '../../i18n/format';
 import type { RuleStrings } from './strings';
 
-/** Plantillas de un hallazgo según su caso: alerta de la regla 6, o sin SQL que sugerir */
-export function findingTemplates(finding: Finding, rule: RuleStrings): { body: string; fix: string } {
+/**
+ * Plantillas de un hallazgo según su caso: alerta de la regla 6, sin SQL que sugerir, y los textos
+ * que en Oracle se dicen distinto.
+ */
+export function findingTemplates(finding: Finding, rule: RuleStrings, dialect: Dialect = 'postgres'): { body: string; fix: string } {
+  const messages = dialect === 'oracle' ? { ...rule, ...rule.oracle } : rule;
   const serious = finding.data.costly === 1;
   return {
-    body: serious && rule.bodyAlert ? rule.bodyAlert : rule.body,
-    fix: serious && rule.fixAlert ? rule.fixAlert : finding.sql.length === 0 && rule.fixNoSql ? rule.fixNoSql : rule.fix,
+    body: serious && messages.bodyAlert ? messages.bodyAlert : messages.body,
+    fix: serious && messages.fixAlert ? messages.fixAlert : finding.sql.length === 0 && messages.fixNoSql ? messages.fixNoSql : messages.fix,
   };
+}
+
+/** Pista extra de un hallazgo, con la versión de Oracle si existe */
+export function findingHint(finding: Finding, hints: Record<string, string>, dialect: Dialect = 'postgres'): string | undefined {
+  const hint = finding.data.hint;
+  if (typeof hint !== 'string' || hint === '') return undefined;
+  return (dialect === 'oracle' ? hints[`${hint}-oracle`] : undefined) ?? hints[hint];
 }
 
 /** Datos que son nombres de SQL: van en monoespaciada */

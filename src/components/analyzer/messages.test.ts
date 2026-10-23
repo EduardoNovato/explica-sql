@@ -3,7 +3,7 @@ import { analysisOf, plans } from '../../engine/fixtures';
 import { ruleOrder, ruleTexts, ruleThresholds } from '../../i18n/rules';
 import { languages, type Lang } from '../../i18n/ui';
 import { analyzerStrings } from './strings';
-import { findingTemplates, formatValue } from './text';
+import { findingHint, findingTemplates, formatValue } from './text';
 
 const langs = Object.keys(languages) as Lang[];
 const placeholders = (template: string) => [...template.matchAll(/\{(\w+)\}/g)].map((match) => match[1] ?? '');
@@ -16,12 +16,12 @@ describe('textos de los hallazgos', () => {
     const missing: string[] = [];
     for (const [name, analysis] of analyses) {
       for (const finding of analysis.findings) {
-        const { body, fix } = findingTemplates(finding, strings.rules[finding.rule]);
+        const { body, fix } = findingTemplates(finding, strings.rules[finding.rule], analysis.dialect);
         for (const key of [...placeholders(body), ...placeholders(fix)]) {
           if (finding.data[key] === undefined || finding.data[key] === '') missing.push(`${name} · ${finding.rule} · {${key}}`);
         }
         const hint = finding.data.hint;
-        if (typeof hint === 'string' && hint !== '' && !strings.hints[hint]) missing.push(`${name} · pista ${hint}`);
+        if (typeof hint === 'string' && hint !== '' && !findingHint(finding, strings.hints, analysis.dialect)) missing.push(`${name} · pista ${hint}`);
       }
       for (const notice of analysis.notices) {
         for (const key of placeholders(strings.analysis.notices[notice.id])) {
@@ -44,6 +44,15 @@ describe('textos de los hallazgos', () => {
     if (!cast || !scan) throw new Error('faltan hallazgos');
     expect(findingTemplates(cast, strings.rules['cast-in-filter']).body).toBe(ruleTexts.es['cast-in-filter'].bodyAlert);
     expect(findingTemplates(scan, strings.rules['seq-scan']).fix).toBe(ruleTexts.es['seq-scan'].fixNoSql);
+  });
+
+  it('en Oracle usa los mensajes propios de Oracle', () => {
+    const strings = analyzerStrings('es');
+    const [sort] = analysisOf(plans.oracleHashSort).findings.filter((finding) => finding.rule === 'sort-disk');
+    if (!sort) throw new Error('falta el hallazgo');
+    const { body, fix } = findingTemplates(sort, strings.rules['sort-disk'], 'oracle');
+    expect(body).toBe(ruleTexts.es['sort-disk'].oracle?.body);
+    expect(fix).not.toContain('work_mem');
   });
 
   it('formatea cada dato según su nombre', () => {

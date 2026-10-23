@@ -1,4 +1,4 @@
-import type { Buffers, PlanNode } from '../types';
+import type { Buffers, NodeKind, PlanNode } from '../types';
 
 export function emptyNode(id: number, label: string): PlanNode {
   return {
@@ -6,6 +6,7 @@ export function emptyNode(id: number, label: string): PlanNode {
     children: [],
     depth: 0,
     type: label,
+    kind: 'other',
     label,
     parallel: false,
     neverExecuted: false,
@@ -28,6 +29,32 @@ export function emptyBuffers(): Buffers {
     tempWritten: 0,
   };
 }
+
+const POSTGRES_KINDS: Record<string, NodeKind> = {
+  'Seq Scan': 'full-scan',
+  'Index Scan': 'index-scan',
+  'Index Only Scan': 'index-scan',
+  'Bitmap Index Scan': 'index-scan',
+  'Bitmap Heap Scan': 'table-access',
+  'Tid Scan': 'table-access',
+  'Tid Range Scan': 'table-access',
+  'Sample Scan': 'table-access',
+  'Foreign Scan': 'table-access',
+  'Nested Loop': 'nested-loop',
+  'Hash Join': 'hash-join',
+  'Merge Join': 'merge-join',
+  Hash: 'hash',
+  HashAggregate: 'hash-aggregate',
+  Sort: 'sort',
+  'Incremental Sort': 'sort',
+  Limit: 'limit',
+  Gather: 'gather',
+  'Gather Merge': 'gather',
+  Result: 'result',
+  ProjectSet: 'result',
+};
+
+export const postgresKind = (type: string): NodeKind => POSTGRES_KINDS[type] ?? 'other';
 
 const JOIN_TYPES = 'Left|Right|Full|Semi|Anti|Right Semi|Right Anti';
 const NESTED_LOOP = new RegExp(`^Nested Loop(?: (${JOIN_TYPES}) Join)?$`);

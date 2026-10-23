@@ -1,0 +1,33 @@
+SQL_ID  0w2qpuc6u2zsp, child number 0
+-------------------------------------
+SELECT /*+ GATHER_PLAN_STATISTICS */ l.l_orderkey, l.l_shipdate,
+o.o_orderdate FROM lineitem l JOIN orders o ON o.o_orderkey =
+l.l_orderkey WHERE l.l_shipdate >= DATE '1998-06-01' ORDER BY
+l.l_shipdate
+
+Plan hash value: 2214560811
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+| Id  | Operation           | Name     | Starts | E-Rows | A-Rows |   A-Time   | Buffers | Reads  | Writes |  OMem |  1Mem | Used-Mem | Used-Tmp|
+-------------------------------------------------------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT    |          |      1 |        |    541K|00:00:03.32 |     113K|    127K|  25016 |       |       |          |         |
+|   1 |  SORT ORDER BY      |          |      1 |    600K|    541K|00:00:03.32 |     113K|    127K|  25016 |    28M|  1859K|   25M (1)|   22528 |
+|*  2 |   HASH JOIN         |          |      1 |    600K|    541K|00:00:02.81 |     113K|    113K|  10110 |    58M|  4987K|   43M (1)|   80896 |
+|   3 |    TABLE ACCESS FULL| ORDERS   |      1 |   1500K|   1500K|00:00:00.21 |    2800 |   2770 |      0 |       |       |          |         |
+|*  4 |    TABLE ACCESS FULL| LINEITEM |      1 |    600K|    541K|00:00:02.12 |     110K|    108K|      0 |       |       |          |         |
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+Query Block Name / Object Alias (identified by operation id):
+-------------------------------------------------------------
+
+   1 - SEL$58A6D7F6
+   3 - SEL$58A6D7F6 / "O"@"SEL$1"
+   4 - SEL$58A6D7F6 / "L"@"SEL$1"
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   2 - access("O"."O_ORDERKEY"="L"."L_ORDERKEY")
+   4 - filter("L"."L_SHIPDATE">=TO_DATE(' 1998-06-01 00:00:00', 'syyyy-mm-dd
+              hh24:mi:ss'))
+

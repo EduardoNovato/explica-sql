@@ -19,15 +19,18 @@ const number = ruleOrder.indexOf(rule) + 1;
 const next: RuleId = ruleOrder[number % ruleOrder.length] ?? 'seq-scan';
 const severity: Severity = ruleSeverity[rule];
 
-// "Cuándo salta" con los umbrales reales del motor
+// "Cuándo salta" y "En Oracle" con los umbrales reales del motor
 const values = ruleThresholds[rule];
-const when = text.page.when.replace(/\{(\w+)\}/g, (match, key: string) => {
-  const value = values[key];
-  if (value === undefined) return match;
-  if (key.endsWith('Share')) return formatPercent(value, locale);
-  if (key.endsWith('Ms')) return formatMs(value, locale);
-  return formatCount(value, locale);
-});
+const fillThresholds = (template: string) =>
+  template.replace(/\{(\w+)\}/g, (match, key: string) => {
+    const value = values[key];
+    if (value === undefined) return match;
+    if (key.endsWith('Share')) return formatPercent(value, locale);
+    if (key.endsWith('Ms')) return formatMs(value, locale);
+    return formatCount(value, locale);
+  });
+const when = fillThresholds(text.page.when);
+const oracle = fillThresholds(text.page.oracle);
 
 const badge: Record<Severity, string> = {
   alert: 'bg-danger-soft text-danger',
@@ -92,6 +95,30 @@ const dot: Record<Severity, string> = { alert: 'bg-danger', warning: 'bg-caution
           </>
         )
       }
+    </section>
+
+    <section class="mt-10 border-t border-line pt-8">
+      <h2 class="text-lg font-medium text-ink">{t.rulesPage.oracle}</h2>
+      <p class="mt-2 leading-relaxed text-pretty text-muted">{oracle}</p>
+      <h3 class="mt-5 text-sm font-medium text-ink">{t.rulesPage.oracleExample}</h3>
+      <pre
+        class="theme-fade mt-2 overflow-x-auto rounded-xl border border-line-strong bg-surface px-4 py-3.5 font-mono text-[12px] leading-[1.7] text-muted [font-variant-ligatures:none]"
+        translate="no">{example.oracle.plan}</pre>
+      {
+        example.oracle.sql && (
+          <>
+            <h3 class="mt-5 text-sm font-medium text-ink">{t.rulesPage.exampleSql}</h3>
+            <pre
+              class="theme-fade mt-2 overflow-x-auto rounded-xl border border-line bg-bg px-4 py-3 font-mono text-[12.5px] leading-relaxed text-ink [font-variant-ligatures:none]"
+              translate="no">{example.oracle.sql}</pre>
+          </>
+        )
+      }
+      <p class="mt-4 text-sm">
+        <a href={languages[lang].oraclePath} class="text-accent underline decoration-accent/40 underline-offset-4 hover:decoration-accent">
+          {t.command.oracleGuide} →
+        </a>
+      </p>
     </section>
 
     <nav class="mt-14 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-6 text-sm">

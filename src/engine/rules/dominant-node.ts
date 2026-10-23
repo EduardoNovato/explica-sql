@@ -23,7 +23,7 @@ export const dominantNodeRule: Rule = {
           selfMs: top.selfMs,
           timeShare: top.selfShare,
           // Un Result con hijos solo calcula las columnas del SELECT: si tarda, suelen ser funciones por fila
-          hint: (top.type === 'Result' || top.type === 'ProjectSet') && top.children.length > 0 ? 'select-functions' : '',
+          hint: top.kind === 'result' && top.children.length > 0 ? 'select-functions' : '',
         },
         sql: [],
       },

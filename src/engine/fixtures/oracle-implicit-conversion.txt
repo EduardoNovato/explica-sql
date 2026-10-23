@@ -1,0 +1,22 @@
+SQL_ID  3fz8q1w9v2kjc, child number 0
+-------------------------------------
+SELECT /*+ GATHER_PLAN_STATISTICS */ * FROM pedidos WHERE numero = 4521
+
+Plan hash value: 2875190732
+
+----------------------------------------------------------------------------------------------
+| Id  | Operation         | Name    | Starts | E-Rows | A-Rows |   A-Time   | Buffers | Reads  |
+----------------------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT  |         |      1 |        |      1 |00:00:00.42 |    6215 |      0 |
+|*  1 |  TABLE ACCESS FULL| PEDIDOS |      1 |      1 |      1 |00:00:00.42 |    6215 |      0 |
+----------------------------------------------------------------------------------------------
+
+Predicate Information (identified by operation id):
+---------------------------------------------------
+
+   1 - filter(TO_NUMBER("NUMERO")=4521)
+
+Note
+-----
+   - dynamic statistics used: dynamic sampling (level=2)
+

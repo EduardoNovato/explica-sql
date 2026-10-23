@@ -1,4 +1,4 @@
-import { createIndex, ownColumns, plainColumns } from '../sql';
+import { ownColumns, plainColumns } from '../sql';
 import { thresholds } from '../thresholds';
 import { ancestors, mainChildren } from '../tree';
 import type { Finding, PlanNode, Rule, RuleContext } from '../types';
@@ -11,13 +11,13 @@ import type { Finding, PlanNode, Rule, RuleContext } from '../types';
 /** El Nested Loop más cercano para el que este escaneo está en el lado interno */
 function innerOf(scan: PlanNode, nodes: PlanNode[]): PlanNode | undefined {
   for (const { ancestor, via } of ancestors(scan, nodes)) {
-    if (ancestor.type === 'Nested Loop' && mainChildren(ancestor, nodes)[1]?.id === via.id) return ancestor;
+    if (ancestor.kind === 'nested-loop' && mainChildren(ancestor, nodes)[1]?.id === via.id) return ancestor;
   }
   return undefined;
 }
 
 function isRepeatedFullScan(node: PlanNode): boolean {
-  return node.type === 'Seq Scan' && !node.neverExecuted && (node.actual?.loops ?? 0) >= thresholds.nestedLoop.minInnerLoops;
+  return node.kind === 'full-scan' && !node.neverExecuted && (node.actual?.loops ?? 0) >= thresholds.nestedLoop.minInnerLoops;
 }
 
 /** La regla 1 no repite lo que esta regla ya explica mejor */
@@ -33,7 +33,7 @@ export const nestedLoopRule: Rule = {
       if (!isRepeatedFullScan(scan)) continue;
       const join = innerOf(scan, ctx.nodes);
       if (!join || !scan.relation) continue;
-      const columns = plainColumns([...ownColumns(scan, scan.filter), ...ownColumns(scan, join.joinFilter)]);
+      const columns = plainColumns([...ownColumns(scan, scan.filter, ctx.sql), ...ownColumns(scan, join.joinFilter, ctx.sql)]);
       findings.push({
         rule: 'nested-loop',
         severity: 'alert',
@@ -46,7 +46,7 @@ export const nestedLoopRule: Rule = {
           columns: columns.join(', '),
           timeShare: ctx.totalMs > 0 ? scan.inclusiveMs / ctx.totalMs : 0,
         },
-        sql: columns.length > 0 ? [createIndex(scan.relation, columns)] : [],
+        sql: columns.length > 0 ? [ctx.sql.createIndex(scan.relation, columns)] : [],
       });
     }
     return findings;

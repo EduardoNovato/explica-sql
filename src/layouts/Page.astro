@@ -9,8 +9,8 @@ interface Props {
   title?: string;
   description?: string;
   paths?: Record<Lang, string>;
-  /** Marca "Reglas" como la sección actual */
-  section?: 'rules';
+  /** Marca la sección actual en el encabezado */
+  section?: 'rules' | 'oracle';
   noindex?: boolean;
 }
 
@@ -40,9 +40,16 @@ const portfolio = new URL(languages[lang].path, author.portfolio).href;
         <a
           href={languages[lang].rulesPath}
           aria-current={section === 'rules' ? 'page' : undefined}
-          class="rounded-lg px-2.5 py-2 text-sm text-muted transition-colors hover:text-ink aria-[current=page]:text-accent"
+          class="rounded-lg px-2 py-2 text-sm text-muted transition-colors hover:text-ink aria-[current=page]:text-accent sm:px-2.5"
         >
           {t.header.rules}
+        </a>
+        <a
+          href={languages[lang].oraclePath}
+          aria-current={section === 'oracle' ? 'page' : undefined}
+          class="rounded-lg px-2 py-2 text-sm text-muted transition-colors hover:text-ink aria-[current=page]:text-accent sm:px-2.5"
+        >
+          {t.header.oracle}
         </a>
         <LangSwitch lang={lang} paths={paths} />
         <ThemeSwitch lang={lang} />

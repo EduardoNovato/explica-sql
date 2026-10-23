@@ -26,35 +26,91 @@ const t = useTranslations(lang);
       <p class="mt-6 max-w-[44ch] text-lg leading-relaxed text-pretty text-muted sm:text-xl">{t.hero.tagline}</p>
     </section>
 
-    <section class="mt-14 sm:mt-16" aria-labelledby="step-run">
-      <StepHeading id="step-run" step={1}>{t.command.title}</StepHeading>
-      <div class="theme-fade mt-4 overflow-hidden rounded-xl border border-line-strong bg-surface">
-        <div class="flex items-center gap-1.5 border-b border-line px-3.5 py-2">
-          <span class="size-2.5 rounded-full border border-ill" aria-hidden="true"></span>
-          <span class="size-2.5 rounded-full border border-ill" aria-hidden="true"></span>
-          <span class="size-2.5 rounded-full bg-accent" aria-hidden="true"></span>
-          <span class="ml-2.5 font-mono text-[11px] text-faint" aria-hidden="true" translate="no">psql · DBeaver · pgAdmin</span>
-          <button
-            type="button"
-            data-copy={'EXPLAIN (ANALYZE, BUFFERS)\n'}
-            data-status="copy-status"
-            data-ok={t.command.copied}
-            data-error={t.command.copyError}
-            class="group -mr-1.5 ml-auto inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 font-mono text-[11px] text-muted transition-colors hover:bg-surface-2 hover:text-accent"
-          >
-            <UiIcon name="copy" class="size-3.5 group-data-[state=copied]:hidden" />
-            <UiIcon name="check" class="hidden size-3.5 text-accent group-data-[state=copied]:block" />
-            <span aria-hidden="true">{t.command.copy}</span>
-            <span class="sr-only">{t.command.copyLong}</span>
-          </button>
+    <section class="mt-14 sm:mt-16" aria-labelledby="step-run" data-tabs>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <StepHeading id="step-run" step={1}>{t.command.title}</StepHeading>
+        <div role="tablist" aria-label={t.command.tabsLabel} class="inline-flex rounded-lg border border-line p-0.5 text-sm">
+          {
+            (['postgres', 'oracle'] as const).map((engine, i) => (
+              <button
+                type="button"
+                role="tab"
+                id={`tab-${engine}`}
+                aria-controls={`panel-${engine}`}
+                aria-selected={i === 0 ? 'true' : 'false'}
+                tabindex={i === 0 ? 0 : -1}
+                data-engine={engine}
+                class="rounded-md px-3 py-1.5 text-muted transition-colors hover:text-ink aria-selected:bg-surface-2 aria-selected:text-ink"
+              >
+                {t.analysis.dialect[engine]}
+              </button>
+            ))
+          }
         </div>
-        <pre
-          class="overflow-x-auto px-4 py-4 font-mono text-[13px] leading-[1.75] text-ink [font-variant-ligatures:none] sm:text-sm"
-          translate="no"><code><span class="text-accent">EXPLAIN</span> (<span class="text-accent">ANALYZE</span>, <span class="text-accent">BUFFERS</span>)
+      </div>
+
+      <div role="tabpanel" id="panel-postgres" aria-labelledby="tab-postgres">
+        <div class="theme-fade mt-4 overflow-hidden rounded-xl border border-line-strong bg-surface">
+          <div class="flex items-center gap-1.5 border-b border-line px-3.5 py-2">
+            <span class="size-2.5 rounded-full border border-ill" aria-hidden="true"></span>
+            <span class="size-2.5 rounded-full border border-ill" aria-hidden="true"></span>
+            <span class="size-2.5 rounded-full bg-accent" aria-hidden="true"></span>
+            <span class="ml-2.5 font-mono text-[11px] text-faint" aria-hidden="true" translate="no">psql · DBeaver · pgAdmin</span>
+            <button
+              type="button"
+              data-copy={'EXPLAIN (ANALYZE, BUFFERS)\n'}
+              data-status="copy-status"
+              data-ok={t.command.copied}
+              data-error={t.command.copyError}
+              class="group -mr-1.5 ml-auto inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 font-mono text-[11px] text-muted transition-colors hover:bg-surface-2 hover:text-accent"
+            >
+              <UiIcon name="copy" class="size-3.5 group-data-[state=copied]:hidden" />
+              <UiIcon name="check" class="hidden size-3.5 text-accent group-data-[state=copied]:block" />
+              <span aria-hidden="true">{t.command.copy}</span>
+              <span class="sr-only">{t.command.copyLong}</span>
+            </button>
+          </div>
+          <pre
+            class="overflow-x-auto px-4 py-4 font-mono text-[13px] leading-[1.75] text-ink [font-variant-ligatures:none] sm:text-sm"
+            translate="no"><code><span class="text-accent">EXPLAIN</span> (<span class="text-accent">ANALYZE</span>, <span class="text-accent">BUFFERS</span>)
 <span class="text-accent">SELECT</span> <span class="text-faint">…</span></code></pre>
+        </div>
+        <p class="mt-3 max-w-[68ch] text-sm leading-relaxed text-pretty text-muted">{t.command.hint}</p>
+      </div>
+
+      <div role="tabpanel" id="panel-oracle" aria-labelledby="tab-oracle" hidden>
+        <div class="theme-fade mt-4 overflow-hidden rounded-xl border border-line-strong bg-surface">
+          <div class="flex items-center gap-1.5 border-b border-line px-3.5 py-2">
+            <span class="size-2.5 rounded-full border border-ill" aria-hidden="true"></span>
+            <span class="size-2.5 rounded-full border border-ill" aria-hidden="true"></span>
+            <span class="size-2.5 rounded-full bg-accent" aria-hidden="true"></span>
+            <span class="ml-2.5 font-mono text-[11px] text-faint" aria-hidden="true" translate="no">SQL Developer · DBeaver · SQL*Plus</span>
+            <button
+              type="button"
+              data-copy={`${t.command.oracleSql}\n`}
+              data-status="copy-status"
+              data-ok={t.command.copied}
+              data-error={t.command.copyError}
+              class="group -mr-1.5 ml-auto inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 font-mono text-[11px] text-muted transition-colors hover:bg-surface-2 hover:text-accent"
+            >
+              <UiIcon name="copy" class="size-3.5 group-data-[state=copied]:hidden" />
+              <UiIcon name="check" class="hidden size-3.5 text-accent group-data-[state=copied]:block" />
+              <span aria-hidden="true">{t.command.copy}</span>
+              <span class="sr-only">{t.command.copyOracleLong}</span>
+            </button>
+          </div>
+          <pre
+            class="overflow-x-auto px-4 py-4 font-mono text-[12.5px] leading-[1.75] text-ink [font-variant-ligatures:none] sm:text-[13px]"
+            translate="no"><code>{t.command.oracleSql.split('\n').map((line) => line.startsWith('--') ? <span class="text-faint">{line}{'\n'}</span> : <span>{line}{'\n'}</span>)}</code></pre>
+        </div>
+        <p class="mt-3 max-w-[68ch] text-sm leading-relaxed text-pretty text-muted">{t.command.oracleHint}</p>
+        <p class="mt-2 text-sm">
+          <a href={languages[lang].oraclePath} class="text-accent underline decoration-accent/40 underline-offset-4 hover:decoration-accent">
+            {t.command.oracleGuide} →
+          </a>
+        </p>
       </div>
       <p id="copy-status" class="sr-only" role="status" aria-live="polite"></p>
-      <p class="mt-3 max-w-[68ch] text-sm leading-relaxed text-pretty text-muted">{t.command.hint}</p>
     </section>
   </div>
 
@@ -78,4 +134,5 @@ const t = useTranslations(lang);
 
 <script>
   import '../scripts/copy.ts';
+  import '../scripts/tabs.ts';
 </script>

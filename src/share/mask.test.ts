@@ -33,6 +33,21 @@ describe('ocultar valores literales', () => {
     expect(JSON.parse(maskLiterals(json))[0].Plan).toMatchObject({ Filter: '(o_custkey = ?)', 'Plan Rows': 15 });
   });
 
+  it('en Oracle oculta el texto de la consulta y los predicados, aunque estén partidos en varias líneas', () => {
+    const masked = maskLiterals(plans.oracleHashSort);
+    expect(masked).not.toContain('1998');
+    expect(masked).toContain("l.l_shipdate >= DATE '?' ORDER BY");
+    expect(masked).toContain(`   4 - filter("L"."L_SHIPDATE">=TO_DATE('?', '?'))`);
+    expect(masked).toContain('   2 - access("O"."O_ORDERKEY"="L"."L_ORDERKEY")');
+    // La tabla con los números del plan no se toca
+    expect(masked).toContain('|*  4 |    TABLE ACCESS FULL| LINEITEM |      1 |    600K|    541K|00:00:02.12 |     110K|    108K|');
+
+    const conversion = maskLiterals(plans.oracleImplicitConversion);
+    expect(conversion).toContain('WHERE numero = ?');
+    expect(conversion).toContain('   1 - filter(TO_NUMBER("NUMERO")=?)');
+    expect(conversion).toContain('dynamic sampling (level=2)');
+  });
+
   it.each(Object.entries(plans))('%s da el mismo análisis con los valores ocultos', (_name, plan) => {
     const summary = (input: string) => {
       const analysis = analysisOf(input);
