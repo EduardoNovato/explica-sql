@@ -1,0 +1,30 @@
+GroupAggregate  (cost=8038.95..8040.69 rows=63 width=72) (actual time=148.970..149.300 rows=7.00 loops=1)
+  Group Key: (SUBSTRING(customer.c_phone FROM 1 FOR 2))
+  Buffers: shared hit=1977 read=2305 written=1
+  InitPlan 1
+    ->  Aggregate  (cost=609.95..609.96 rows=1 width=32) (actual time=19.092..19.093 rows=1.00 loops=1)
+          Buffers: shared hit=4 read=211
+          ->  Seq Scan on customer customer_1  (cost=0.00..608.75 rows=477 width=6) (actual time=0.034..16.998 rows=3816.00 loops=1)
+                Filter: ((c_acctbal > 0.00) AND (SUBSTRING(c_phone FROM 1 FOR 2) = ANY ('{13,31,23,29,30,18,17}'::text[])))
+                Rows Removed by Filter: 11184
+                Buffers: shared hit=4 read=211
+  ->  Sort  (cost=7429.00..7429.16 rows=63 width=38) (actual time=148.907..149.034 rows=633.00 loops=1)
+        Sort Key: (SUBSTRING(customer.c_phone FROM 1 FOR 2))
+        Sort Method: quicksort  Memory: 36kB
+        Buffers: shared hit=1977 read=2305 written=1
+        ->  Hash Right Anti Join  (cost=610.94..7427.12 rows=63 width=38) (actual time=148.275..148.647 rows=633.00 loops=1)
+              Hash Cond: (orders.o_custkey = customer.c_custkey)
+              Buffers: shared hit=1977 read=2305 written=1
+              ->  Seq Scan on orders  (cost=0.00..5352.00 rows=150000 width=4) (actual time=18.740..66.214 rows=150000.00 loops=1)
+                    Buffers: shared hit=1758 read=2094 written=1
+              ->  Hash  (cost=608.75..608.75 rows=175 width=26) (actual time=32.503..32.504 rows=1935.00 loops=1)
+                    Buckets: 2048 (originally 1024)  Batches: 1 (originally 1)  Memory Usage: 107kB
+                    Buffers: shared hit=219 read=211
+                    ->  Seq Scan on customer  (cost=0.00..608.75 rows=175 width=26) (actual time=19.138..30.913 rows=1935.00 loops=1)
+                          Filter: ((c_acctbal > (InitPlan 1).col1) AND (SUBSTRING(c_phone FROM 1 FOR 2) = ANY ('{13,31,23,29,30,18,17}'::text[])))
+                          Rows Removed by Filter: 13065
+                          Buffers: shared hit=219 read=211
+Planning:
+  Buffers: shared hit=4 read=2
+Planning Time: 0.654 ms
+Execution Time: 149.369 ms

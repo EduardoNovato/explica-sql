@@ -26,6 +26,28 @@ describe('regla 1 · escaneo completo costoso', () => {
     expect(findingsOf(analysisOf(plans.hashSort), 'seq-scan')[0]?.sql).toEqual(['CREATE INDEX ON lineitem (l_shipdate);']);
   });
 
+  it('ordena el índice: primero las igualdades, después un solo rango', () => {
+    // Como la subconsulta de TPC-H Q20: el filtro trae primero el rango de fechas
+    const plan = [
+      'Seq Scan on lineitem  (cost=0.00..19000.00 rows=1 width=8) (actual time=0.010..60.000 rows=1 loops=1)',
+      "  Filter: ((l_shipdate >= '1994-01-01'::date) AND (l_shipdate < '1995-01-01'::date) AND (l_partkey = $1) AND (l_suppkey = $2))",
+      '  Rows Removed by Filter: 600000',
+      'Execution Time: 61.000 ms',
+    ].join('\n');
+    expect(findingsOf(analysisOf(plan), 'seq-scan')[0]?.sql).toEqual(['CREATE INDEX ON lineitem (l_partkey, l_suppkey, l_shipdate);']);
+  });
+
+  it('no usa columnas que solo se comparan con otra columna de la misma tabla', () => {
+    // Como TPC-H Q12: l_commitdate < l_receiptdate no sirve para un índice
+    const plan = [
+      'Seq Scan on lineitem  (cost=0.00..19000.00 rows=10 width=8) (actual time=0.010..60.000 rows=10 loops=1)',
+      "  Filter: ((l_shipmode = ANY ('{MAIL,SHIP}'::bpchar[])) AND (l_commitdate < l_receiptdate) AND (l_shipdate < l_commitdate) AND (l_receiptdate >= '1994-01-01'::date))",
+      '  Rows Removed by Filter: 600000',
+      'Execution Time: 61.000 ms',
+    ].join('\n');
+    expect(findingsOf(analysisOf(plan), 'seq-scan')[0]?.sql).toEqual(['CREATE INDEX ON lineitem (l_shipmode, l_receiptdate);']);
+  });
+
   it('no sugiere un índice normal si la columna va dentro de una función', () => {
     const [finding] = findingsOf(analysisOf(plans.dateFilter), 'seq-scan');
     expect(finding?.severity).toBe('alert');

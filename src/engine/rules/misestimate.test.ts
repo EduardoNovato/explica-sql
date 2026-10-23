@@ -16,7 +16,8 @@ describe('regla 2 · estimación muy errada', () => {
       severity: 'warning',
       nodeId: 2,
       data: { table: 'facturas', estimatedRows: 1, actualRows: 3870, factor: 3870, direction: 'under', hint: 'functions' },
-      sql: ['ANALYZE facturas;'],
+      // Con funciones en el filtro, ANALYZE no cambia nada: no se sugiere
+      sql: [],
     });
   });
 
@@ -51,6 +52,8 @@ describe('regla 2 · estimación muy errada', () => {
       '        ->  Seq Scan on clientes c  (cost=0.00..1.08 rows=800 width=12) (actual time=0.006..0.008 rows=800 loops=1)',
       'Execution Time: 35.000 ms',
     ].join('\n');
-    expect(findingsOf(analysisOf(plan), 'misestimate')).toMatchObject([{ nodeId: 0, sql: ['ANALYZE clientes;', 'ANALYZE pedidos;'] }]);
+    expect(findingsOf(analysisOf(plan), 'misestimate')).toMatchObject([
+      { nodeId: 0, data: { hint: 'join' }, sql: ['ANALYZE clientes;', 'ANALYZE pedidos;'] },
+    ]);
   });
 });

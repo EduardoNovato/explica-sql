@@ -1,0 +1,28 @@
+Sort  (cost=7796.15..7796.65 rows=200 width=16) (actual time=311.309..311.330 rows=39.00 loops=1)
+  Sort Key: (count(*)) DESC, (count(orders.o_orderkey)) DESC
+  Sort Method: quicksort  Memory: 18kB
+  Buffers: shared hit=4067
+  ->  HashAggregate  (cost=7786.50..7788.50 rows=200 width=16) (actual time=311.241..311.272 rows=39.00 loops=1)
+        Group Key: count(orders.o_orderkey)
+        Batches: 1  Memory Usage: 32kB
+        Buffers: shared hit=4067
+        ->  HashAggregate  (cost=7411.50..7561.50 rows=15000 width=12) (actual time=289.318..300.075 rows=15000.00 loops=1)
+              Group Key: customer.c_custkey
+              Batches: 1  Memory Usage: 1169kB
+              Buffers: shared hit=4067
+              ->  Hash Right Join  (cost=552.50..6669.28 rows=148445 width=8) (actual time=15.563..204.557 rows=153463.00 loops=1)
+                    Hash Cond: (orders.o_custkey = customer.c_custkey)
+                    Buffers: shared hit=4067
+                    ->  Seq Scan on orders  (cost=0.00..5727.00 rows=148445 width=8) (actual time=1.085..78.893 rows=148463.00 loops=1)
+                          Filter: ((o_comment)::text !~~ '%special%requests%'::text)
+                          Rows Removed by Filter: 1537
+                          Buffers: shared hit=3852
+                    ->  Hash  (cost=365.00..365.00 rows=15000 width=4) (actual time=14.467..14.469 rows=15000.00 loops=1)
+                          Buckets: 16384  Batches: 1  Memory Usage: 475kB
+                          Buffers: shared hit=215
+                          ->  Seq Scan on customer  (cost=0.00..365.00 rows=15000 width=4) (actual time=0.034..6.976 rows=15000.00 loops=1)
+                                Buffers: shared hit=215
+Planning:
+  Buffers: shared hit=6
+Planning Time: 0.435 ms
+Execution Time: 311.443 ms

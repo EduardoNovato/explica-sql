@@ -1,0 +1,47 @@
+Limit  (cost=24830.74..24830.79 rows=20 width=124) (actual time=322.866..322.922 rows=20.00 loops=1)
+  Buffers: shared hit=13838
+  ->  Sort  (cost=24830.74..24845.87 rows=6054 width=124) (actual time=322.863..322.901 rows=20.00 loops=1)
+        Sort Key: (sum((lineitem.l_extendedprice * ('1'::numeric - lineitem.l_discount)))) DESC
+        Sort Method: top-N heapsort  Memory: 21kB
+        Buffers: shared hit=13838
+        ->  HashAggregate  (cost=24593.97..24669.64 rows=6054 width=124) (actual time=314.135..319.074 rows=3867.00 loops=1)
+              Group Key: customer.c_custkey, nation.n_name
+              Batches: 1  Memory Usage: 1393kB
+              Buffers: shared hit=13838
+              ->  Nested Loop  (cost=6730.78..24518.29 rows=6054 width=104) (actual time=53.331..296.419 rows=11633.00 loops=1)
+                    Buffers: shared hit=13838
+                    ->  Hash Join  (cost=6730.64..24366.27 rows=6054 width=82) (actual time=53.309..275.779 rows=11633.00 loops=1)
+                          Hash Cond: (orders.o_custkey = customer.c_custkey)
+                          Buffers: shared hit=13788
+                          ->  Hash Join  (cost=6178.14..23797.87 rows=6054 width=16) (actual time=29.978..240.949 rows=11633.00 loops=1)
+                                Hash Cond: (lineitem.l_orderkey = orders.o_orderkey)
+                                Buffers: shared hit=13573
+                                ->  Seq Scan on lineitem  (cost=0.00..17228.38 rows=149086 width=16) (actual time=0.094..153.542 rows=148662.00 loops=1)
+                                      Filter: (l_returnflag = 'R'::bpchar)
+                                      Rows Removed by Filter: 451928
+                                      Buffers: shared hit=9721
+                                ->  Hash  (cost=6102.00..6102.00 rows=6091 width=8) (actual time=29.768..29.770 rows=5789.00 loops=1)
+                                      Buckets: 8192  Batches: 1  Memory Usage: 213kB
+                                      Buffers: shared hit=3852
+                                      ->  Seq Scan on orders  (cost=0.00..6102.00 rows=6091 width=8) (actual time=1.574..26.037 rows=5789.00 loops=1)
+                                            Filter: ((o_orderdate >= '1993-10-01'::date) AND (o_orderdate < '1994-01-01 00:00:00'::timestamp without time zone))
+                                            Rows Removed by Filter: 144211
+                                            Buffers: shared hit=3852
+                          ->  Hash  (cost=365.00..365.00 rows=15000 width=70) (actual time=23.319..23.321 rows=15000.00 loops=1)
+                                Buckets: 16384  Batches: 1  Memory Usage: 1471kB
+                                Buffers: shared hit=215
+                                ->  Seq Scan on customer  (cost=0.00..365.00 rows=15000 width=70) (actual time=0.038..10.388 rows=15000.00 loops=1)
+                                      Buffers: shared hit=215
+                    ->  Memoize  (cost=0.15..0.17 rows=1 width=30) (actual time=0.001..0.001 rows=1.00 loops=11633)
+                          Cache Key: customer.c_nationkey
+                          Cache Mode: logical
+                          Hits: 11608  Misses: 25  Evictions: 0  Overflows: 0  Memory Usage: 3kB
+                          Buffers: shared hit=50
+                          ->  Index Scan using nation_pkey on nation  (cost=0.14..0.16 rows=1 width=30) (actual time=0.002..0.002 rows=1.00 loops=25)
+                                Index Cond: (n_nationkey = customer.c_nationkey)
+                                Index Searches: 25
+                                Buffers: shared hit=50
+Planning:
+  Buffers: shared hit=27
+Planning Time: 1.173 ms
+Execution Time: 323.052 ms

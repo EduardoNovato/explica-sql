@@ -1,0 +1,34 @@
+Sort  (cost=3218.55..3222.60 rows=1622 width=44) (actual time=131.070..131.616 rows=2898.00 loops=1)
+  Sort Key: (count(DISTINCT partsupp.ps_suppkey)) DESC, part.p_brand, part.p_type, part.p_size
+  Sort Method: quicksort  Memory: 246kB
+  Buffers: shared hit=997
+  ->  GroupAggregate  (cost=3039.12..3132.06 rows=1622 width=44) (actual time=118.215..127.502 rows=2898.00 loops=1)
+        Group Key: part.p_brand, part.p_type, part.p_size
+        Buffers: shared hit=997
+        ->  Sort  (cost=3039.12..3054.46 rows=6138 width=40) (actual time=118.193..121.037 rows=12133.00 loops=1)
+              Sort Key: part.p_brand, part.p_type, part.p_size, partsupp.ps_suppkey
+              Sort Method: quicksort  Memory: 970kB
+              Buffers: shared hit=997
+              ->  Hash Join  (cost=958.91..2652.93 rows=6138 width=40) (actual time=15.049..97.719 rows=12133.00 loops=1)
+                    Hash Cond: (partsupp.ps_partkey = part.p_partkey)
+                    Buffers: shared hit=997
+                    ->  Seq Scan on partsupp  (cost=27.53..1616.53 rows=40000 width=8) (actual time=0.372..46.866 rows=78960.00 loops=1)
+                          Filter: (NOT (ANY (ps_suppkey = (hashed SubPlan 1).col1)))
+                          Rows Removed by Filter: 1040
+                          Buffers: shared hit=604
+                          SubPlan 1
+                            ->  Seq Scan on supplier  (cost=0.00..27.50 rows=13 width=4) (actual time=0.055..0.312 rows=13.00 loops=1)
+                                  Filter: ((s_comment)::text ~~ '%Customer%Complaints%'::text)
+                                  Rows Removed by Filter: 987
+                                  Buffers: shared hit=15
+                    ->  Hash  (cost=893.00..893.00 rows=3070 width=40) (actual time=14.660..14.661 rows=3071.00 loops=1)
+                          Buckets: 4096  Batches: 1  Memory Usage: 215kB
+                          Buffers: shared hit=393
+                          ->  Seq Scan on part  (cost=0.00..893.00 rows=3070 width=40) (actual time=0.052..11.619 rows=3071.00 loops=1)
+                                Filter: ((p_brand <> 'Brand#45'::bpchar) AND ((p_type)::text !~~ 'MEDIUM POLISHED%'::text) AND (p_size = ANY ('{49,14,23,45,19,3,36,9}'::integer[])))
+                                Rows Removed by Filter: 16929
+                                Buffers: shared hit=393
+Planning:
+  Buffers: shared hit=12
+Planning Time: 0.692 ms
+Execution Time: 132.216 ms

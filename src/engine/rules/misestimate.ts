@@ -47,10 +47,13 @@ export const misestimateRule: Rule = {
         const withFunctions = condition !== undefined && functionCalls(condition).length > 0;
         const tables = isTableScan(node) ? [node] : descendants(node, ctx.nodes).filter(isTableScan).slice(0, 3);
 
+        // Con funciones en el filtro, actualizar estadísticas no cambia nada: no se sugiere
         const sql: string[] = [];
-        const columns = isTableScan(node) && !withFunctions ? plainColumns(ownColumns(node, condition, ctx.sql)) : [];
-        if (node.relation && columns.length >= 2) sql.push(ctx.sql.extendedStats(node.relation, columns));
-        for (const table of new Set(tables.map((scan) => scan.relation))) if (table) sql.push(ctx.sql.gatherStats(table));
+        if (!withFunctions) {
+          const columns = isTableScan(node) ? plainColumns(ownColumns(node, condition, ctx.sql)) : [];
+          if (node.relation && columns.length >= 2) sql.push(ctx.sql.extendedStats(node.relation, columns));
+          for (const table of new Set(tables.map((scan) => scan.relation))) if (table) sql.push(ctx.sql.gatherStats(table));
+        }
 
         return {
           rule: 'misestimate' as const,
@@ -63,7 +66,8 @@ export const misestimateRule: Rule = {
             actualRows: actual * loops,
             factor: errorFactor(node),
             direction: estimated < actual ? 'under' : 'over',
-            hint: withFunctions ? 'functions' : '',
+            // 'join': el error nace al combinar o agrupar filas, donde ANALYZE suele no alcanzar
+            hint: withFunctions ? 'functions' : isTableScan(node) ? '' : 'join',
           },
           sql,
         };

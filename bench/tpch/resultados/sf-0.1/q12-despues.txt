@@ -1,0 +1,29 @@
+GroupAggregate  (cost=17643.48..17701.89 rows=7 width=27) (actual time=142.213..143.847 rows=2.00 loops=1)
+  Group Key: lineitem.l_shipmode
+  Buffers: shared hit=12028
+  ->  Sort  (cost=17643.48..17650.77 rows=2917 width=27) (actual time=140.854..141.779 rows=3117.00 loops=1)
+        Sort Key: lineitem.l_shipmode
+        Sort Method: quicksort  Memory: 211kB
+        Buffers: shared hit=12028
+        ->  Hash Join  (cost=10781.93..17475.60 rows=2917 width=27) (actual time=24.979..138.228 rows=3117.00 loops=1)
+              Hash Cond: (orders.o_orderkey = lineitem.l_orderkey)
+              Buffers: shared hit=12028
+              ->  Seq Scan on orders  (cost=0.00..5352.00 rows=150000 width=20) (actual time=1.585..54.675 rows=150000.00 loops=1)
+                    Buffers: shared hit=3852
+              ->  Hash  (cost=10745.47..10745.47 rows=2917 width=15) (actual time=23.361..23.365 rows=3117.00 loops=1)
+                    Buckets: 4096  Batches: 1  Memory Usage: 138kB
+                    Buffers: shared hit=8176
+                    ->  Bitmap Heap Scan on lineitem  (cost=433.75..10745.47 rows=2917 width=15) (actual time=3.460..21.494 rows=3117.00 loops=1)
+                          Recheck Cond: ((l_shipmode = ANY ('{MAIL,SHIP}'::bpchar[])) AND (l_receiptdate >= '1994-01-01'::date) AND (l_receiptdate < '1995-01-01 00:00:00'::timestamp without time zone))
+                          Filter: ((l_commitdate < l_receiptdate) AND (l_shipdate < l_commitdate))
+                          Rows Removed by Filter: 22847
+                          Heap Blocks: exact=8146
+                          Buffers: shared hit=8176
+                          ->  Bitmap Index Scan on lineitem_l_shipmode_l_receiptdate_idx  (cost=0.00..433.03 rows=26254 width=0) (actual time=2.023..2.024 rows=25964.00 loops=1)
+                                Index Cond: ((l_shipmode = ANY ('{MAIL,SHIP}'::bpchar[])) AND (l_receiptdate >= '1994-01-01'::date) AND (l_receiptdate < '1995-01-01 00:00:00'::timestamp without time zone))
+                                Index Searches: 2
+                                Buffers: shared hit=30
+Planning:
+  Buffers: shared hit=17
+Planning Time: 0.635 ms
+Execution Time: 143.916 ms

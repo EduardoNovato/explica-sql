@@ -200,6 +200,7 @@ const es: Record<RuleId, RuleText> = {
     short: 'El planificador esperaba muchas más o muchas menos filas de las que salieron.',
     body: 'El planificador esperaba {estimatedRows} filas aquí y salieron {actualRows}: se equivocó {factor}.',
     fix: 'Con estadísticas al día elige mejor cómo leer y unir las tablas. Corre ANALYZE; si el filtro combina columnas que dependen entre sí, crea estadísticas extendidas.',
+    fixNoSql: 'Reescribe la condición para que el planificador la pueda estimar (mira la pista de arriba).',
     oracle: {
       fix: 'Con estadísticas al día, Oracle elige mejor cómo leer y unir las tablas. Actualízalas con DBMS_STATS; si el filtro combina columnas que dependen entre sí, crea estadísticas extendidas.',
     },
@@ -352,6 +353,7 @@ const en: Record<RuleId, RuleText> = {
     short: 'The planner expected far more or far fewer rows than it got.',
     body: 'The planner expected {estimatedRows} rows here and got {actualRows}: off by {factor}.',
     fix: 'With fresh statistics it picks better ways to read and join tables. Run ANALYZE; if the filter combines columns that depend on each other, create extended statistics.',
+    fixNoSql: 'Rewrite the condition so the planner can estimate it (see the hint above).',
     oracle: {
       fix: 'With fresh statistics, Oracle picks better ways to read and join tables. Refresh them with DBMS_STATS; if the filter combines columns that depend on each other, create extended statistics.',
     },
@@ -484,6 +486,9 @@ export const ruleHints: Record<Lang, Record<string, string>> = {
       "El filtro usa funciones y el planificador no puede saber qué devuelven, así que ANALYZE no lo arregla. Si es un filtro opcional del tipo columna LIKE función(parámetro, '%'), agrega la condición solo cuando venga el parámetro.",
     'functions-oracle':
       "El filtro usa funciones y Oracle no puede saber qué devuelven, así que DBMS_STATS no lo arregla. Si es un filtro opcional del tipo columna LIKE NVL(parámetro, '%'), agrega la condición solo cuando venga el parámetro.",
+    join: 'El error nace al combinar o agrupar filas, no al leer una tabla. Si las estadísticas ya están al día, ANALYZE no lo cambia: el planificador supone que las condiciones son independientes. Revisa si hay columnas relacionadas entre tablas o condiciones entre columnas (como fecha_a < fecha_b), que no puede estimar bien.',
+    'join-oracle':
+      'El error nace al combinar o agrupar filas, no al leer una tabla. Si las estadísticas ya están al día, DBMS_STATS no lo cambia: Oracle supone que las condiciones son independientes. Revisa si hay columnas relacionadas entre tablas o condiciones entre columnas (como fecha_a < fecha_b), que no puede estimar bien.',
     'select-functions':
       'Este Result solo calcula las columnas del SELECT, así que el tiempo se va en funciones o subconsultas que corren por cada fila. Córrelo con EXPLAIN (ANALYZE, BUFFERS, VERBOSE) para ver en Output qué calcula, y cámbialo por un JOIN.',
   },
@@ -492,6 +497,9 @@ export const ruleHints: Record<Lang, Record<string, string>> = {
       "The filter uses functions and the planner can’t know what they return, so ANALYZE won’t fix it. If it’s an optional filter like column LIKE function(parameter, '%'), add the condition only when the parameter is given.",
     'functions-oracle':
       "The filter uses functions and Oracle can’t know what they return, so DBMS_STATS won’t fix it. If it’s an optional filter like column LIKE NVL(parameter, '%'), add the condition only when the parameter is given.",
+    join: 'The error starts when rows are combined or grouped, not when a table is read. If statistics are already fresh, ANALYZE won’t change it: the planner assumes conditions are independent. Check for related columns across tables or column-to-column conditions (like date_a < date_b), which it can’t estimate well.',
+    'join-oracle':
+      'The error starts when rows are combined or grouped, not when a table is read. If statistics are already fresh, DBMS_STATS won’t change it: Oracle assumes conditions are independent. Check for related columns across tables or column-to-column conditions (like date_a < date_b), which it can’t estimate well.',
     'select-functions':
       'This Result only computes the SELECT columns, so the time goes into functions or subqueries that run for every row. Run it with EXPLAIN (ANALYZE, BUFFERS, VERBOSE) to see in Output what it computes, and replace it with a JOIN.',
   },

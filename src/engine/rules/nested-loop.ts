@@ -1,4 +1,4 @@
-import { ownColumns, plainColumns } from '../sql';
+import { indexColumns } from '../sql';
 import { thresholds } from '../thresholds';
 import { ancestors, mainChildren } from '../tree';
 import type { Finding, PlanNode, Rule, RuleContext } from '../types';
@@ -33,7 +33,7 @@ export const nestedLoopRule: Rule = {
       if (!isRepeatedFullScan(scan)) continue;
       const join = innerOf(scan, ctx.nodes);
       if (!join || !scan.relation) continue;
-      const columns = plainColumns([...ownColumns(scan, scan.filter, ctx.sql), ...ownColumns(scan, join.joinFilter, ctx.sql)]);
+      const columns = indexColumns(scan, [scan.filter, join.joinFilter], ctx.sql);
       findings.push({
         rule: 'nested-loop',
         severity: 'alert',

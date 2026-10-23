@@ -1,0 +1,8 @@
+Aggregate  (cost=23290.89..23290.90 rows=1 width=32) (actual time=122.720..122.722 rows=1.00 loops=1)
+  Buffers: shared hit=8846 read=875
+  ->  Seq Scan on lineitem  (cost=0.00..23234.28 rows=11323 width=12) (actual time=0.041..116.140 rows=11465.00 loops=1)
+        Filter: ((l_shipdate >= '1994-01-01'::date) AND (l_shipdate < '1995-01-01 00:00:00'::timestamp without time zone) AND (l_discount >= 0.05) AND (l_discount <= 0.07) AND (l_quantity < '24'::numeric))
+        Rows Removed by Filter: 589125
+        Buffers: shared hit=8846 read=875
+Planning Time: 0.151 ms
+Execution Time: 122.770 ms

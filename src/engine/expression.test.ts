@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { columnRefs, functionCalls, sortKeyColumn } from './expression';
+import { columnRefs, comparisons, functionCalls, sortKeyColumn } from './expression';
 
 describe('columnas de una condición', () => {
   it('encuentra columnas sueltas y calificadas, sin literales ni parámetros', () => {
@@ -37,6 +37,25 @@ describe('columnas de una condición', () => {
   it('lista las funciones llamadas', () => {
     expect(functionCalls("((numero)::text ~~ opcional(NULL::text, '%'::text))")).toEqual(['opcional']);
     expect(functionCalls('(id = ANY ($1))')).toEqual([]);
+  });
+});
+
+describe('comparaciones', () => {
+  it('distingue igualdades, rangos y columna contra columna', () => {
+    const found = comparisons(
+      "((l_shipmode = ANY ('{MAIL,SHIP}'::bpchar[])) AND (l_commitdate < l_receiptdate) AND (l_receiptdate >= '1994-01-01'::date) AND (l_quantity <> 3))",
+    );
+    expect(found.map(({ column, kind, against }) => [column.name, kind, against?.name])).toEqual([
+      ['l_shipmode', 'equality', undefined],
+      ['l_commitdate', 'range', 'l_receiptdate'],
+      ['l_receiptdate', 'range', 'l_commitdate'],
+      ['l_receiptdate', 'range', undefined],
+    ]);
+  });
+
+  it('salta conversiones de tipo y reconoce las funciones', () => {
+    expect(comparisons("((f.creado_en)::timestamp without time zone >= '2026-01-01'::date)")[0]?.column).toMatchObject({ qualifier: 'f', name: 'creado_en' });
+    expect(comparisons('(TO_NUMBER("NUMERO")=4521)')[0]?.column).toMatchObject({ name: '"NUMERO"', fn: 'TO_NUMBER' });
   });
 });
 

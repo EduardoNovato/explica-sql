@@ -24,3 +24,6 @@ Thumbs.db
 .claude/
 .agents/
 skills-lock.json
+
+# caso TPC-H: base de datos generada (se vuelve a crear con npm run tpch)
+bench/tpch/.data/

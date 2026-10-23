@@ -1,0 +1,26 @@
+Sort  (cost=25771.69..25771.70 rows=5 width=24) (actual time=441.674..441.679 rows=5.00 loops=1)
+  Sort Key: orders.o_orderpriority
+  Sort Method: quicksort  Memory: 17kB
+  Buffers: shared hit=11810 read=1763
+  ->  HashAggregate  (cost=25771.58..25771.63 rows=5 width=24) (actual time=441.652..441.657 rows=5.00 loops=1)
+        Group Key: orders.o_orderpriority
+        Batches: 1  Memory Usage: 32kB
+        Buffers: shared hit=11810 read=1763
+        ->  Hash Right Semi Join  (cost=6172.81..25748.41 rows=4634 width=16) (actual time=32.773..436.549 rows=5204.00 loops=1)
+              Hash Cond: (lineitem.l_orderkey = orders.o_orderkey)
+              Buffers: shared hit=11810 read=1763
+              ->  Seq Scan on lineitem  (cost=0.00..17228.38 rows=200197 width=4) (actual time=0.072..263.907 rows=380097.00 loops=1)
+                    Filter: (l_commitdate < l_receiptdate)
+                    Rows Removed by Filter: 220493
+                    Buffers: shared hit=7958 read=1763
+              ->  Hash  (cost=6102.00..6102.00 rows=5665 width=20) (actual time=32.417..32.418 rows=5702.00 loops=1)
+                    Buckets: 8192  Batches: 1  Memory Usage: 278kB
+                    Buffers: shared hit=3852
+                    ->  Seq Scan on orders  (cost=0.00..6102.00 rows=5665 width=20) (actual time=1.311..28.533 rows=5702.00 loops=1)
+                          Filter: ((o_orderdate >= '1993-07-01'::date) AND (o_orderdate < '1993-10-01 00:00:00'::timestamp without time zone))
+                          Rows Removed by Filter: 144298
+                          Buffers: shared hit=3852
+Planning:
+  Buffers: shared hit=32
+Planning Time: 1.793 ms
+Execution Time: 441.781 ms

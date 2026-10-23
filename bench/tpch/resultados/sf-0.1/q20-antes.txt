@@ -1,0 +1,44 @@
+Sort  (cost=52696982.69..52696982.77 rows=32 width=35) (actual time=238446.211..238446.230 rows=21.00 loops=1)
+  Sort Key: supplier.s_name
+  Sort Method: quicksort  Memory: 18kB
+  Buffers: shared hit=24616914 read=865 written=5
+  ->  Nested Loop  (cost=0.29..52696981.89 rows=32 width=35) (actual time=237966.725..238446.105 rows=21.00 loops=1)
+        Join Filter: (nation.n_nationkey = supplier.s_nationkey)
+        Rows Removed by Join Filter: 803
+        Buffers: shared hit=24616914 read=865 written=5
+        ->  Seq Scan on nation  (cost=0.00..1.31 rows=1 width=4) (actual time=0.029..0.038 rows=1.00 loops=1)
+              Filter: (n_name = 'CANADA'::bpchar)
+              Rows Removed by Filter: 24
+              Buffers: shared hit=1
+        ->  Nested Loop Semi Join  (cost=0.29..52696970.48 rows=808 width=39) (actual time=64239.818..238445.732 rows=824.00 loops=1)
+              Join Filter: (supplier.s_suppkey = partsupp.ps_suppkey)
+              Rows Removed by Join Filter: 830679
+              Buffers: shared hit=24616913 read=865 written=5
+              ->  Seq Scan on supplier  (cost=0.00..25.00 rows=1000 width=43) (actual time=0.018..0.972 rows=1000.00 loops=1)
+                    Buffers: shared hit=2 read=13
+              ->  Materialize  (cost=0.29..52684827.50 rows=808 width=4) (actual time=0.357..238.183 rows=831.50 loops=1000)
+                    Storage: Memory  Maximum Storage: 71kB
+                    Buffers: shared hit=24616911 read=852 written=5
+                    ->  Nested Loop  (cost=0.29..52684823.46 rows=808 width=4) (actual time=356.415..237951.511 rows=1739.00 loops=1)
+                          Buffers: shared hit=24616911 read=852 written=5
+                          ->  Seq Scan on part  (cost=0.00..643.00 rows=606 width=4) (actual time=0.036..6.573 rows=633.00 loops=1)
+                                Filter: ((p_name)::text ~~ 'forest%'::text)
+                                Rows Removed by Filter: 19367
+                                Buffers: shared hit=393
+                          ->  Index Scan using partsupp_pkey on partsupp  (cost=0.29..86937.58 rows=1 width=8) (actual time=132.982..375.890 rows=2.75 loops=633)
+                                Index Cond: (ps_partkey = part.p_partkey)
+                                Filter: ((ps_availqty)::numeric > (SubPlan 1))
+                                Rows Removed by Filter: 1
+                                Index Searches: 633
+                                Buffers: shared hit=24616518 read=852 written=5
+                                SubPlan 1
+                                  ->  Aggregate  (cost=21732.81..21732.82 rows=1 width=32) (actual time=93.931..93.932 rows=1.00 loops=2532)
+                                        Buffers: shared hit=24613572
+                                        ->  Seq Scan on lineitem  (cost=0.00..21732.80 rows=1 width=5) (actual time=55.398..93.873 rows=1.16 loops=2532)
+                                              Filter: ((l_shipdate >= '1994-01-01'::date) AND (l_shipdate < '1995-01-01 00:00:00'::timestamp without time zone) AND (l_partkey = partsupp.ps_partkey) AND (l_suppkey = partsupp.ps_suppkey))
+                                              Rows Removed by Filter: 600589
+                                              Buffers: shared hit=24613572
+Planning:
+  Buffers: shared hit=15 read=12
+Planning Time: 2.250 ms
+Execution Time: 238446.310 ms

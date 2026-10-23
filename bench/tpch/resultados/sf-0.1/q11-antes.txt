@@ -1,0 +1,57 @@
+Sort  (cost=3659.47..3662.14 rows=1067 width=36) (actual time=119.967..120.022 rows=112.00 loops=1)
+  Sort Key: (sum((partsupp.ps_supplycost * (partsupp.ps_availqty)::numeric))) DESC
+  Sort Method: quicksort  Memory: 20kB
+  Buffers: shared hit=1210
+  InitPlan 1
+    ->  Aggregate  (cost=1774.90..1774.91 rows=1 width=32) (actual time=54.801..54.809 rows=1.00 loops=1)
+          Buffers: shared hit=605
+          ->  Hash Join  (cost=29.89..1750.89 rows=3200 width=10) (actual time=0.992..52.678 rows=2960.00 loops=1)
+                Hash Cond: (partsupp_1.ps_suppkey = supplier_1.s_suppkey)
+                Buffers: shared hit=605
+                ->  Seq Scan on partsupp partsupp_1  (cost=0.00..1389.00 rows=80000 width=14) (actual time=0.072..25.104 rows=80000.00 loops=1)
+                      Buffers: shared hit=589
+                ->  Hash  (cost=29.39..29.39 rows=40 width=4) (actual time=0.840..0.845 rows=37.00 loops=1)
+                      Buckets: 1024  Batches: 1  Memory Usage: 6kB
+                      Buffers: shared hit=16
+                      ->  Hash Join  (cost=1.32..29.39 rows=40 width=4) (actual time=0.108..0.817 rows=37.00 loops=1)
+                            Hash Cond: (supplier_1.s_nationkey = nation_1.n_nationkey)
+                            Buffers: shared hit=16
+                            ->  Seq Scan on supplier supplier_1  (cost=0.00..25.00 rows=1000 width=8) (actual time=0.022..0.380 rows=1000.00 loops=1)
+                                  Buffers: shared hit=15
+                            ->  Hash  (cost=1.31..1.31 rows=1 width=4) (actual time=0.025..0.027 rows=1.00 loops=1)
+                                  Buckets: 1024  Batches: 1  Memory Usage: 5kB
+                                  Buffers: shared hit=1
+                                  ->  Seq Scan on nation nation_1  (cost=0.00..1.31 rows=1 width=4) (actual time=0.020..0.022 rows=1.00 loops=1)
+                                        Filter: (n_name = 'GERMANY'::bpchar)
+                                        Rows Removed by Filter: 24
+                                        Buffers: shared hit=1
+  ->  HashAggregate  (cost=1782.89..1830.89 rows=1067 width=36) (actual time=118.567..119.896 rows=112.00 loops=1)
+        Group Key: partsupp.ps_partkey
+        Filter: (sum((partsupp.ps_supplycost * (partsupp.ps_availqty)::numeric)) > (InitPlan 1).col1)
+        Batches: 1  Memory Usage: 705kB
+        Rows Removed by Filter: 2710
+        Buffers: shared hit=1210
+        ->  Hash Join  (cost=29.89..1750.89 rows=3200 width=14) (actual time=0.803..59.355 rows=2960.00 loops=1)
+              Hash Cond: (partsupp.ps_suppkey = supplier.s_suppkey)
+              Buffers: shared hit=605
+              ->  Seq Scan on partsupp  (cost=0.00..1389.00 rows=80000 width=18) (actual time=0.029..27.770 rows=80000.00 loops=1)
+                    Buffers: shared hit=589
+              ->  Hash  (cost=29.39..29.39 rows=40 width=4) (actual time=0.699..0.704 rows=37.00 loops=1)
+                    Buckets: 1024  Batches: 1  Memory Usage: 6kB
+                    Buffers: shared hit=16
+                    ->  Hash Join  (cost=1.32..29.39 rows=40 width=4) (actual time=0.087..0.681 rows=37.00 loops=1)
+                          Hash Cond: (supplier.s_nationkey = nation.n_nationkey)
+                          Buffers: shared hit=16
+                          ->  Seq Scan on supplier  (cost=0.00..25.00 rows=1000 width=8) (actual time=0.013..0.316 rows=1000.00 loops=1)
+                                Buffers: shared hit=15
+                          ->  Hash  (cost=1.31..1.31 rows=1 width=4) (actual time=0.026..0.027 rows=1.00 loops=1)
+                                Buckets: 1024  Batches: 1  Memory Usage: 5kB
+                                Buffers: shared hit=1
+                                ->  Seq Scan on nation  (cost=0.00..1.31 rows=1 width=4) (actual time=0.017..0.020 rows=1.00 loops=1)
+                                      Filter: (n_name = 'GERMANY'::bpchar)
+                                      Rows Removed by Filter: 24
+                                      Buffers: shared hit=1
+Planning:
+  Buffers: shared hit=26 read=1
+Planning Time: 0.938 ms
+Execution Time: 120.135 ms

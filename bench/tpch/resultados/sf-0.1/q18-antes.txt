@@ -1,0 +1,46 @@
+Limit  (cost=96970.68..96970.93 rows=100 width=71) (actual time=2886.441..2886.773 rows=8.00 loops=1)
+  Buffers: shared hit=23228 read=1925 written=4
+  ->  Sort  (cost=96970.68..97377.37 rows=162676 width=71) (actual time=2886.436..2886.753 rows=8.00 loops=1)
+        Sort Key: orders.o_totalprice DESC, orders.o_orderdate
+        Sort Method: quicksort  Memory: 17kB
+        Buffers: shared hit=23228 read=1925 written=4
+        ->  HashAggregate  (cost=85860.33..90753.32 rows=162676 width=71) (actual time=2886.196..2886.695 rows=8.00 loops=1)
+              Group Key: customer.c_custkey, orders.o_orderkey
+              Planned Partitions: 8  Batches: 1  Memory Usage: 417kB
+              Buffers: shared hit=23228 read=1925 written=4
+              ->  Hash Join  (cost=50342.72..69948.59 rows=162676 width=44) (actual time=1820.940..2886.219 rows=56.00 loops=1)
+                    Hash Cond: (lineitem.l_orderkey = orders.o_orderkey)
+                    Buffers: shared hit=23228 read=1925 written=4
+                    ->  Seq Scan on lineitem  (cost=0.00..15726.90 rows=600590 width=9) (actual time=0.072..553.427 rows=600590.00 loops=1)
+                          Buffers: shared hit=9575 read=146
+                    ->  Hash  (cost=49834.85..49834.85 rows=40629 width=43) (actual time=1785.627..1785.928 rows=8.00 loops=1)
+                          Buckets: 65536  Batches: 1  Memory Usage: 257kB
+                          Buffers: shared hit=13653 read=1779 written=4
+                          ->  Hash Join  (cost=43982.41..49834.85 rows=40629 width=43) (actual time=1554.961..1785.875 rows=8.00 loops=1)
+                                Hash Cond: (orders.o_custkey = customer.c_custkey)
+                                Buffers: shared hit=13653 read=1779 written=4
+                                ->  Hash Join  (cost=43429.91..49175.67 rows=40629 width=24) (actual time=1532.180..1762.997 rows=8.00 loops=1)
+                                      Hash Cond: (orders.o_orderkey = lineitem_1.l_orderkey)
+                                      Buffers: shared hit=13438 read=1779 written=4
+                                      ->  Seq Scan on orders  (cost=0.00..5352.00 rows=150000 width=20) (actual time=2.551..124.278 rows=150000.00 loops=1)
+                                            Buffers: shared hit=3852
+                                      ->  Hash  (cost=42922.04..42922.04 rows=40629 width=4) (actual time=1510.317..1510.600 rows=8.00 loops=1)
+                                            Buckets: 65536  Batches: 1  Memory Usage: 257kB
+                                            Buffers: shared hit=9586 read=1779 written=4
+                                            ->  GroupAggregate  (cost=0.42..42922.04 rows=40629 width=4) (actual time=44.873..1510.266 rows=8.00 loops=1)
+                                                  Group Key: lineitem_1.l_orderkey
+                                                  Filter: (sum(lineitem_1.l_quantity) > '300'::numeric)
+                                                  Rows Removed by Filter: 149992
+                                                  Buffers: shared hit=9586 read=1779 written=4
+                                                  ->  Index Scan using lineitem_pkey on lineitem lineitem_1  (cost=0.42..38090.78 rows=600590 width=9) (actual time=0.026..705.577 rows=600590.00 loops=1)
+                                                        Index Searches: 1
+                                                        Buffers: shared hit=9586 read=1779 written=4
+                                ->  Hash  (cost=365.00..365.00 rows=15000 width=23) (actual time=22.765..22.769 rows=15000.00 loops=1)
+                                      Buckets: 16384  Batches: 1  Memory Usage: 768kB
+                                      Buffers: shared hit=215
+                                      ->  Seq Scan on customer  (cost=0.00..365.00 rows=15000 width=23) (actual time=0.048..10.284 rows=15000.00 loops=1)
+                                            Buffers: shared hit=215
+Planning:
+  Buffers: shared hit=34
+Planning Time: 4.661 ms
+Execution Time: 2887.016 ms

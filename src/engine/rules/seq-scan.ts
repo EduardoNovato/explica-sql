@@ -1,4 +1,4 @@
-import { ownColumns, plainColumns } from '../sql';
+import { indexColumns } from '../sql';
 import { thresholds } from '../thresholds';
 import type { Dialect, PlanNode, Rule } from '../types';
 import { isNestedLoopInnerScan } from './nested-loop';
@@ -46,7 +46,7 @@ export const seqScanRule: Rule = {
         const kept = node.actual?.rows ?? 0;
         const relation = node.relation ?? '';
         // Las columnas envueltas en funciones no sirven para un índice normal (lo cubre la regla 6)
-        const columns = plainColumns(ownColumns(node, node.filter, ctx.sql));
+        const columns = indexColumns(node, [node.filter], ctx.sql);
         const common = { table: relation, keptRows: kept * loops, timeShare: node.selfShare, columns: columns.join(', ') };
         return {
           rule: 'seq-scan' as const,

@@ -1,0 +1,45 @@
+Sort  (cost=25033.10..25033.18 rows=32 width=35) (actual time=25.624..25.640 rows=21.00 loops=1)
+  Sort Key: supplier.s_name
+  Sort Method: quicksort  Memory: 18kB
+  Buffers: shared hit=14756
+  ->  Hash Right Semi Join  (cost=30.19..25032.30 rows=32 width=35) (actual time=1.490..25.605 rows=21.00 loops=1)
+        Hash Cond: (partsupp.ps_suppkey = supplier.s_suppkey)
+        Buffers: shared hit=14756
+        ->  Nested Loop  (cost=0.29..24999.06 rows=808 width=4) (actual time=0.086..24.533 rows=1739.00 loops=1)
+              Buffers: shared hit=14740
+              ->  Seq Scan on part  (cost=0.00..643.00 rows=606 width=4) (actual time=0.044..2.776 rows=633.00 loops=1)
+                    Filter: ((p_name)::text ~~ 'forest%'::text)
+                    Rows Removed by Filter: 19367
+                    Buffers: shared hit=393
+              ->  Index Scan using partsupp_pkey on partsupp  (cost=0.29..40.18 rows=1 width=8) (actual time=0.013..0.032 rows=2.75 loops=633)
+                    Index Cond: (ps_partkey = part.p_partkey)
+                    Filter: ((ps_availqty)::numeric > (SubPlan 1))
+                    Rows Removed by Filter: 1
+                    Index Searches: 633
+                    Buffers: shared hit=14347
+                    SubPlan 1
+                      ->  Aggregate  (cost=8.46..8.47 rows=1 width=32) (actual time=0.005..0.006 rows=1.00 loops=2532)
+                            Buffers: shared hit=10549
+                            ->  Index Scan using lineitem_l_partkey_l_suppkey_l_shipdate_idx on lineitem  (cost=0.42..8.45 rows=1 width=5) (actual time=0.003..0.004 rows=1.16 loops=2532)
+                                  Index Cond: ((l_partkey = partsupp.ps_partkey) AND (l_suppkey = partsupp.ps_suppkey) AND (l_shipdate >= '1994-01-01'::date) AND (l_shipdate < '1995-01-01 00:00:00'::timestamp without time zone))
+                                  Index Searches: 2532
+                                  Buffers: shared hit=10549
+        ->  Hash  (cost=29.39..29.39 rows=40 width=39) (actual time=0.537..0.543 rows=30.00 loops=1)
+              Buckets: 1024  Batches: 1  Memory Usage: 6kB
+              Buffers: shared hit=16
+              ->  Hash Join  (cost=1.32..29.39 rows=40 width=39) (actual time=0.037..0.529 rows=30.00 loops=1)
+                    Hash Cond: (supplier.s_nationkey = nation.n_nationkey)
+                    Buffers: shared hit=16
+                    ->  Seq Scan on supplier  (cost=0.00..25.00 rows=1000 width=43) (actual time=0.014..0.244 rows=1000.00 loops=1)
+                          Buffers: shared hit=15
+                    ->  Hash  (cost=1.31..1.31 rows=1 width=4) (actual time=0.015..0.018 rows=1.00 loops=1)
+                          Buckets: 1024  Batches: 1  Memory Usage: 5kB
+                          Buffers: shared hit=1
+                          ->  Seq Scan on nation  (cost=0.00..1.31 rows=1 width=4) (actual time=0.010..0.014 rows=1.00 loops=1)
+                                Filter: (n_name = 'CANADA'::bpchar)
+                                Rows Removed by Filter: 24
+                                Buffers: shared hit=1
+Planning:
+  Buffers: shared hit=22
+Planning Time: 0.660 ms
+Execution Time: 25.734 ms

@@ -1,0 +1,27 @@
+Aggregate  (cost=190281.99..190282.00 rows=1 width=32) (actual time=24294.720..24294.728 rows=1.00 loops=1)
+  Buffers: shared hit=3849909
+  ->  Hash Join  (cost=693.25..190281.48 rows=200 width=8) (actual time=165.229..24294.632 rows=46.00 loops=1)
+        Hash Cond: (lineitem.l_partkey = part.p_partkey)
+        Join Filter: (lineitem.l_quantity < (SubPlan 1))
+        Rows Removed by Join Filter: 349
+        Buffers: shared hit=3849909
+        ->  Seq Scan on lineitem  (cost=0.00..15726.90 rows=600590 width=17) (actual time=0.032..172.976 rows=600590.00 loops=1)
+              Buffers: shared hit=9721
+        ->  Hash  (cost=693.00..693.00 rows=20 width=4) (actual time=3.464..3.466 rows=13.00 loops=1)
+              Buckets: 1024  Batches: 1  Memory Usage: 5kB
+              Buffers: shared hit=393
+              ->  Seq Scan on part  (cost=0.00..693.00 rows=20 width=4) (actual time=0.142..3.451 rows=13.00 loops=1)
+                    Filter: ((p_brand = 'Brand#23'::bpchar) AND (p_container = 'MED BOX'::bpchar))
+                    Rows Removed by Filter: 19987
+                    Buffers: shared hit=393
+        SubPlan 1
+          ->  Aggregate  (cost=17228.45..17228.46 rows=1 width=32) (actual time=60.614..60.614 rows=1.00 loops=395)
+                Buffers: shared hit=3839795
+                ->  Seq Scan on lineitem lineitem_1  (cost=0.00..17228.38 rows=30 width=5) (actual time=1.949..60.476 rows=30.82 loops=395)
+                      Filter: (l_partkey = part.p_partkey)
+                      Rows Removed by Filter: 600559
+                      Buffers: shared hit=3839795
+Planning:
+  Buffers: shared hit=17
+Planning Time: 1.420 ms
+Execution Time: 24294.917 ms

@@ -1,4 +1,4 @@
-import { columnRefs, type ColumnRef } from './expression';
+import { columnRefs, comparisons, type ColumnRef } from './expression';
 import { thresholds } from './thresholds';
 import { namesOf } from './tree';
 import type { Dialect, PlanNode, SqlDialect } from './types';
@@ -23,6 +23,32 @@ export function plainColumns(refs: ColumnRef[]): string[] {
   const columns: string[] = [];
   for (const ref of refs) if (!ref.fn && !columns.includes(ref.name)) columns.push(ref.name);
   return columns.slice(0, MAX_INDEX_COLUMNS);
+}
+
+/**
+ * Columnas para un índice B-tree a partir de las condiciones: primero las que se comparan con `=`
+ * (o un IN), después una sola de rango (`<`, `>=`, LIKE 'abc%'). No entran las envueltas en funciones
+ * ni las que solo se comparan con otra columna de la misma tabla (`l_commitdate < l_receiptdate`).
+ * Si nada sirve, quedan las columnas sueltas del filtro.
+ */
+export function indexColumns(node: PlanNode, conditions: (string | undefined)[], sql: SqlDialect): string[] {
+  const names = namesOf(node).map(sql.cleanIdentifier);
+  const own = (ref: ColumnRef | undefined) =>
+    ref !== undefined && (ref.qualifier === undefined || names.includes(sql.cleanIdentifier(ref.qualifier)));
+  const equality: string[] = [];
+  const range: string[] = [];
+  for (const condition of conditions) {
+    if (!condition) continue;
+    for (const { column, kind, against } of comparisons(condition)) {
+      if (!own(column) || column.fn || own(against)) continue;
+      const name = sql.cleanIdentifier(column.name);
+      const list = kind === 'equality' ? equality : range;
+      if (!list.includes(name)) list.push(name);
+    }
+  }
+  const columns = [...equality, ...range.filter((name) => !equality.includes(name)).slice(0, 1)];
+  if (columns.length > 0) return columns.slice(0, MAX_INDEX_COLUMNS);
+  return plainColumns(conditions.flatMap((condition) => ownColumns(node, condition, sql)));
 }
 
 /** Valor de work_mem para que quepan `kb` kilobytes: la potencia de 2 en MB inmediatamente superior */

@@ -79,9 +79,20 @@ function typeEnd(tokens: Token[], i: number): number {
   return last;
 }
 
+/** Referencias con la posición de sus tokens (primero y último), para ubicar las comparaciones */
+interface PlacedRef {
+  ref: ColumnRef;
+  first: number;
+  last: number;
+}
+
 export function columnRefs(expr: string): ColumnRef[] {
+  return readRefs(expr).refs.map((placed) => placed.ref);
+}
+
+function readRefs(expr: string): { tokens: Token[]; refs: PlacedRef[] } {
   const tokens = tokenize(expr);
-  const refs: ColumnRef[] = [];
+  const refs: PlacedRef[] = [];
   const frames: { fn?: string; start: number; refs: ColumnRef[]; items: number }[] = [];
   const countItem = () => {
     const frame = frames[frames.length - 1];
@@ -128,19 +139,67 @@ export function columnRefs(expr: string): ColumnRef[] {
         countItem();
         continue;
       }
+      const first = i;
       let ref: ColumnRef = { name: token.text };
       if (next?.text === '.' && isName(tokens[i + 2])) {
         ref = { qualifier: token.text, name: tokens[i + 2]?.text ?? '' };
         i += 2;
       }
-      refs.push(ref);
+      refs.push({ ref, first, last: i });
       frames[frames.length - 1]?.refs.push(ref);
       countItem();
       continue;
     }
     countItem();
   }
-  return refs;
+  return { tokens, refs };
+}
+
+/** Operadores de comparación que imprime PostgreSQL u Oracle (`~~` es LIKE) */
+const EQUALITY = new Set(['=']);
+const RANGE = new Set(['<', '>', '<=', '>=', '~~', '~~*']);
+
+export interface Comparison {
+  column: ColumnRef;
+  kind: 'equality' | 'range';
+  /** La otra columna, si se compara contra una columna y no contra un valor */
+  against?: ColumnRef;
+}
+
+/**
+ * Comparaciones simples de la condición: columna contra valor, parámetro u otra columna.
+ * `(l_partkey = part.p_partkey)` da una igualdad de l_partkey contra p_partkey (y al revés);
+ * `x = ANY ('{…}')` (un IN) cuenta como igualdad. `<>` y las demás no sirven para un índice.
+ */
+export function comparisons(expr: string): Comparison[] {
+  const { tokens, refs } = readRefs(expr);
+  const byLast = new Map(refs.map((placed) => [placed.last, placed.ref]));
+  const byFirst = new Map(refs.map((placed) => [placed.first, placed.ref]));
+  const found: Comparison[] = [];
+
+  tokens.forEach((token, i) => {
+    const kind = EQUALITY.has(token.text) ? 'equality' : RANGE.has(token.text) ? 'range' : undefined;
+    if (token.kind !== 'op' || !kind) return;
+
+    // A la izquierda: saltar paréntesis que cierran y el tipo de una conversión, `(col)::text`
+    let left = i - 1;
+    for (;;) {
+      const current = tokens[left];
+      if (current?.text === ')') left--;
+      else if (current?.kind === 'word' && (TYPE_WORDS.has(current.text) || tokens[left - 1]?.kind === 'cast')) left--;
+      else if (current?.kind === 'cast') left--;
+      else break;
+    }
+    // A la derecha: saltar paréntesis que abren y ANY / ALL
+    let right = i + 1;
+    while (tokens[right]?.text === '(' || tokens[right]?.text === 'ANY' || tokens[right]?.text === 'ALL') right++;
+
+    const leftRef = byLast.get(left);
+    const rightRef = byFirst.get(right);
+    if (leftRef) found.push({ column: leftRef, kind, against: rightRef });
+    if (rightRef) found.push({ column: rightRef, kind, against: leftRef });
+  });
+  return found;
 }
 
 /** Nombres de las funciones llamadas en la expresión */

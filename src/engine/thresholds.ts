@@ -5,7 +5,7 @@
  * Si cambia un umbral o la lógica de una regla, sube RULES_VERSION: los links compartidos guardan
  * la versión con la que se analizó el plan.
  */
-export const RULES_VERSION = 2;
+export const RULES_VERSION = 3;
 
 export const verdictLimits = {
   /** Menos de esto es "rápida": solo notas, ninguna alerta */

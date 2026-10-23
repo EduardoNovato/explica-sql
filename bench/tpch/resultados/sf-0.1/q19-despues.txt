@@ -1,0 +1,28 @@
+Aggregate  (cost=12585.88..12585.89 rows=1 width=32) (actual time=45.279..45.283 rows=1.00 loops=1)
+  Buffers: shared hit=9254
+  ->  Hash Join  (cost=2181.19..12585.79 rows=12 width=12) (actual time=23.050..45.245 rows=14.00 loops=1)
+        Hash Cond: (lineitem.l_partkey = part.p_partkey)
+        Join Filter: (((part.p_brand = 'Brand#12'::bpchar) AND (part.p_container = ANY ('{"SM CASE","SM BOX","SM PACK","SM PKG"}'::bpchar[])) AND (lineitem.l_quantity >= '1'::numeric) AND (lineitem.l_quantity <= '11'::numeric) AND (part.p_size <= 5)) OR ((part.p_brand = 'Brand#23'::bpchar) AND (part.p_container = ANY ('{"MED BAG","MED BOX","MED PKG","MED PACK"}'::bpchar[])) AND (lineitem.l_quantity >= '10'::numeric) AND (lineitem.l_quantity <= '20'::numeric) AND (part.p_size <= 10)) OR ((part.p_brand = 'Brand#34'::bpchar) AND (part.p_container = ANY ('{"LG CASE","LG BOX","LG PACK","LG PKG"}'::bpchar[])) AND (lineitem.l_quantity >= '20'::numeric) AND (lineitem.l_quantity <= '30'::numeric) AND (part.p_size <= 15)))
+        Rows Removed by Join Filter: 23
+        Buffers: shared hit=9254
+        ->  Bitmap Heap Scan on lineitem  (cost=937.58..11312.25 rows=11400 width=21) (actual time=4.643..32.128 rows=12924.00 loops=1)
+              Recheck Cond: ((l_shipmode = ANY ('{AIR,"AIR REG"}'::bpchar[])) AND (l_shipinstruct = 'DELIVER IN PERSON'::bpchar))
+              Filter: (((l_quantity >= '1'::numeric) AND (l_quantity <= '11'::numeric)) OR ((l_quantity >= '10'::numeric) AND (l_quantity <= '20'::numeric)) OR ((l_quantity >= '20'::numeric) AND (l_quantity <= '30'::numeric)))
+              Rows Removed by Filter: 8663
+              Heap Blocks: exact=8677
+              Buffers: shared hit=8861
+              ->  Bitmap Index Scan on lineitem_l_shipmode_l_shipinstruct_l_quantity_idx  (cost=0.00..934.73 rows=21789 width=0) (actual time=2.532..2.532 rows=21587.00 loops=1)
+                    Index Cond: ((l_shipmode = ANY ('{AIR,"AIR REG"}'::bpchar[])) AND (l_shipinstruct = 'DELIVER IN PERSON'::bpchar))
+                    Index Searches: 2
+                    Buffers: shared hit=184
+        ->  Hash  (cost=1243.00..1243.00 rows=49 width=30) (actual time=8.086..8.087 rows=53.00 loops=1)
+              Buckets: 1024  Batches: 1  Memory Usage: 7kB
+              Buffers: shared hit=393
+              ->  Seq Scan on part  (cost=0.00..1243.00 rows=49 width=30) (actual time=0.043..7.999 rows=53.00 loops=1)
+                    Filter: ((p_size >= 1) AND (((p_brand = 'Brand#12'::bpchar) AND (p_container = ANY ('{"SM CASE","SM BOX","SM PACK","SM PKG"}'::bpchar[])) AND (p_size <= 5)) OR ((p_brand = 'Brand#23'::bpchar) AND (p_container = ANY ('{"MED BAG","MED BOX","MED PKG","MED PACK"}'::bpchar[])) AND (p_size <= 10)) OR ((p_brand = 'Brand#34'::bpchar) AND (p_container = ANY ('{"LG CASE","LG BOX","LG PACK","LG PKG"}'::bpchar[])) AND (p_size <= 15))))
+                    Rows Removed by Filter: 19947
+                    Buffers: shared hit=393
+Planning:
+  Buffers: shared hit=6
+Planning Time: 0.671 ms
+Execution Time: 45.345 ms
